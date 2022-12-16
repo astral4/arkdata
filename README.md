@@ -1,0 +1,2 @@
+# arkdata
+ Arknights game data
