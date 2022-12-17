@@ -4,7 +4,7 @@ use std::{fs::File, io::BufReader};
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub struct Version {
     #[serde(rename = "resVersion")]
-    resource: String,
+    pub resource: String,
     #[serde(rename = "clientVersion")]
     client: String,
 }
@@ -13,6 +13,7 @@ pub struct Version {
 pub struct Details {
     #[serde(flatten)]
     pub version: Version,
+    #[serde(skip)]
     path: String,
 }
 
@@ -20,7 +21,7 @@ impl Version {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
     pub async fn fetch_latest(
-        client: reqwest::Client,
+        client: &reqwest::Client,
         url: String,
     ) -> Result<Self, reqwest::Error> {
         let response = client
@@ -69,7 +70,7 @@ mod tests {
     #[tokio::test]
     async fn get_version() {
         let client = Client::new();
-        Version::fetch_latest(client, format!("{BASE_URL}/version"))
+        Version::fetch_latest(&client, format!("{BASE_URL}/version"))
             .await
             .unwrap();
     }
@@ -77,7 +78,7 @@ mod tests {
     #[tokio::test]
     async fn reject_invalid_url() {
         let client = Client::new();
-        let version = Version::fetch_latest(client, String::default()).await;
+        let version = Version::fetch_latest(&client, String::default()).await;
         assert!(version.is_err());
     }
 

@@ -25,3 +25,8 @@ features = ["rt-multi-thread", "fs", "macros"]
 version = "1.2.2"
 default-features = false
 features = ["v4"]
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
