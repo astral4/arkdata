@@ -1,0 +1,33 @@
+[package]
+name = "arkdata"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+reqwest = "0.11.13"
+serde_json = "1.0.89"
+zip = "0.6.3"
+
+[dependencies.ahash]
+version = "0.8.2"
+features = ["serde"]
+
+[dependencies.serde]
+version = "1.0.151"
+features = ["derive"]
+
+[dependencies.tokio]
+version = "1.23.0"
+features = ["rt-multi-thread", "fs", "macros"]
+
+[dev-dependencies]
+
+[dev-dependencies.uuid]
+version = "1.2.2"
+default-features = false
+features = ["v4"]
