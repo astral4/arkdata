@@ -10,11 +10,11 @@ pub struct Version {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Details {
+pub struct Details<'a> {
     #[serde(flatten)]
     pub version: Version,
     #[serde(skip)]
-    path: String,
+    path: &'a str,
 }
 
 impl Version {
@@ -38,18 +38,18 @@ impl Version {
     }
 }
 
-impl Details {
+impl Details<'_> {
     #[must_use]
-    pub fn get(path: &str) -> Self {
+    pub fn get(path: &str) -> Details {
         let file = File::open(path).expect("Failed to open details file");
         let mut details: Details =
             serde_json::from_reader(BufReader::new(file)).expect("Failed to deserialize details");
-        details.path = path.to_string();
+        details.path = path;
         details
     }
 
     pub fn save(self) {
-        let file = File::create(&self.path).expect("Failed to open details file");
+        let file = File::create(self.path).expect("Failed to open details file");
         serde_json::to_writer(file, &self).expect("Failed to serialize details");
     }
 }
