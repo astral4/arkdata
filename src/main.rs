@@ -1,7 +1,10 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 use arkdata::{Details, NameHashMapping, UpdateInfo, Version, BASE_URL};
+use futures::{stream::FuturesUnordered, StreamExt};
 use reqwest::Client;
+
+async fn do_something(_: String) {}
 
 #[tokio::main]
 async fn main() {
@@ -28,17 +31,21 @@ async fn main() {
     .expect("Failed to fetch asset info list")
     .ab_infos;
 
-    let mut new_assets = Vec::<String>::with_capacity(asset_info.len());
-
-    for entry in asset_info {
-        if name_to_hash_mapping
-            .get(entry.name.as_ref())
-            .map_or(true, |hash| hash != &entry.md5)
-        {
-            name_to_hash_mapping.insert(entry.name.to_string(), entry.md5);
-            new_assets.push(entry.name.into_owned());
-        }
-    }
+    asset_info
+        .into_iter()
+        .filter_map(|entry| {
+            name_to_hash_mapping
+                .get(&entry.name)
+                .map_or(true, |hash| hash != &entry.md5)
+                .then(|| {
+                    name_to_hash_mapping.insert(entry.name.clone(), entry.md5);
+                    entry.name
+                })
+        })
+        .map(do_something)
+        .collect::<FuturesUnordered<_>>()
+        .collect::<()>()
+        .await;
 
     details.save();
 }
