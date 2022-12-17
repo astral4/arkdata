@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::BufReader};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub struct Version {
     #[serde(rename = "resVersion")]
     resource: String,
@@ -14,6 +14,27 @@ pub struct Details {
     #[serde(flatten)]
     pub version: Version,
     path: String,
+}
+
+impl Version {
+    /// # Errors
+    /// Returns Err if the HTTP response fetching fails in some way.
+    pub async fn fetch_latest(
+        client: reqwest::Client,
+        url: String,
+    ) -> Result<Self, reqwest::Error> {
+        let response = client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
+
+        let version: Self =
+            serde_json::from_str(response.as_str()).expect("Failed to read response as Version");
+        Ok(version)
+    }
 }
 
 impl Details {
