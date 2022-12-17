@@ -1,28 +1,33 @@
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::BufReader};
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Version {
+#[derive(Serialize, Deserialize)]
+pub struct Version {
+    #[serde(rename = "resVersion")]
     resource: String,
+    #[serde(rename = "clientVersion")]
     client: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Details {
-    version: Version,
+    #[serde(flatten)]
+    pub version: Version,
+    path: String,
 }
 
 impl Details {
     #[must_use]
-    pub fn get(path: Option<&str>) -> Self {
-        let path = path.unwrap_or("details.json");
+    pub fn get(path: &str) -> Self {
         let file = File::open(path).expect("Failed to open details file");
-        serde_json::from_reader(BufReader::new(file)).expect("Failed to deserialize details")
+        let mut details: Details =
+            serde_json::from_reader(BufReader::new(file)).expect("Failed to deserialize details");
+        details.path = path.to_string();
+        details
     }
 
-    pub fn save(self, path: Option<&str>) {
-        let path = path.unwrap_or("details.json");
-        let file = File::create(path).expect("Failed to open details file");
+    pub fn save(self) {
+        let file = File::create(&self.path).expect("Failed to open details file");
         serde_json::to_writer(file, &self).expect("Failed to serialize details");
     }
 }
@@ -42,7 +47,7 @@ mod tests {
     #[should_panic]
     #[allow(unused_must_use)]
     fn panic_on_nonexistent_file() {
-        Details::get(Some(generate_path().as_str()));
+        Details::get(generate_path().as_str());
     }
 
     #[test]
@@ -53,7 +58,7 @@ mod tests {
         let res = catch_unwind(|| {
             if let Ok(file) = File::create(&path) {
                 if serde_json::to_writer(file, &json!("{}")).is_ok() {
-                    Details::get(Some(path.as_str()));
+                    Details::get(path.as_str());
                 }
             }
         });
