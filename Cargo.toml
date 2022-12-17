@@ -11,10 +11,11 @@ path = "src/lib.rs"
 [dependencies]
 serde = { version = "1.0.151", features = ["derive"] }
 serde_json = "1.0.89"
+anyhow = "1.0.67"
 reqwest = "0.11.13"
 ahash = { version = "0.8.2", features = ["serde"] }
 futures = "0.3.25"
-zip = "0.6.3"
+zip-extract = "0.1.1"
 
 [dependencies.tokio]
 version = "1.23.0"

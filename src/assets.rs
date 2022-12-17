@@ -1,11 +1,12 @@
 use ahash::HashMap;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::BufReader};
 
 #[derive(Serialize, Deserialize)]
 pub struct NameHashMapping<'a> {
     #[serde(flatten)]
-    pub map: HashMap<String, String>,
+    pub inner: HashMap<String, String>,
     #[serde(skip)]
     path: &'a str,
 }
@@ -26,12 +27,6 @@ impl NameHashMapping<'_> {
     }
 }
 
-impl From<Vec<AssetData>> for NameHashMapping<'_> {
-    fn from(_value: Vec<AssetData>) -> Self {
-        todo!()
-    }
-}
-
 #[derive(Deserialize)]
 pub struct AssetData {
     pub name: String,
@@ -47,10 +42,7 @@ pub struct UpdateInfo {
 impl UpdateInfo {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn fetch_latest(
-        client: &reqwest::Client,
-        url: String,
-    ) -> Result<Self, reqwest::Error> {
+    pub async fn fetch_latest(client: &reqwest::Client, url: String) -> Result<Self> {
         let response = client
             .get(url)
             .send()

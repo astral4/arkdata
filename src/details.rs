@@ -1,3 +1,5 @@
+use anyhow::Result;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::BufReader};
 
@@ -20,10 +22,7 @@ pub struct Details<'a> {
 impl Version {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn fetch_latest(
-        client: &reqwest::Client,
-        url: String,
-    ) -> Result<Self, reqwest::Error> {
+    pub async fn fetch_latest(client: &Client, url: String) -> Result<Self> {
         let response = client
             .get(url)
             .send()
@@ -58,7 +57,6 @@ impl Details<'_> {
 mod tests {
     use super::*;
     use crate::BASE_URL;
-    use reqwest::Client;
     use serde_json::json;
     use std::panic::catch_unwind;
     use uuid::Uuid;
