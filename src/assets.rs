@@ -3,21 +3,30 @@ use serde::{Deserialize, Serialize};
 use std::{fs::File, io::BufReader};
 
 #[derive(Serialize, Deserialize)]
-pub struct NameHashMapping {
+pub struct NameHashMapping<'a> {
     #[serde(flatten)]
     pub map: HashMap<String, String>,
+    #[serde(skip)]
+    path: &'a str,
 }
 
-impl NameHashMapping {
+impl NameHashMapping<'_> {
     #[must_use]
-    pub fn get(path: &str) -> Self {
+    pub fn get(path: &str) -> NameHashMapping {
         let file = File::open(path).expect("Failed to open name-to-hash file");
-        serde_json::from_reader(BufReader::new(file))
-            .expect("Failed to deserialize name-to-hash data")
+        let mut mapping: NameHashMapping = serde_json::from_reader(BufReader::new(file))
+            .expect("Failed to deserialize name-hash mapping");
+        mapping.path = path;
+        mapping
+    }
+
+    pub fn save(self) {
+        let file = File::create(self.path).expect("Failed to open name-to-hash file");
+        serde_json::to_writer(file, &self).expect("Failed to serialize name-hash mapping");
     }
 }
 
-impl From<Vec<AssetData>> for NameHashMapping {
+impl From<Vec<AssetData>> for NameHashMapping<'_> {
     fn from(_value: Vec<AssetData>) -> Self {
         todo!()
     }

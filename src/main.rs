@@ -9,7 +9,7 @@ async fn do_something(_: String) {}
 #[tokio::main]
 async fn main() {
     let mut details = Details::get("details.json");
-    let mut name_to_hash_mapping = NameHashMapping::get("hashes.json").map;
+    let mut name_to_hash_mapping = NameHashMapping::get("hashes.json");
     let client = Client::new();
 
     let data_version = Version::fetch_latest(&client, format!("{BASE_URL}/version"))
@@ -35,10 +35,13 @@ async fn main() {
         .into_iter()
         .filter_map(|entry| {
             name_to_hash_mapping
+                .map
                 .get(&entry.name)
                 .map_or(true, |hash| hash != &entry.md5)
                 .then(|| {
-                    name_to_hash_mapping.insert(entry.name.clone(), entry.md5);
+                    name_to_hash_mapping
+                        .map
+                        .insert(entry.name.clone(), entry.md5);
                     entry.name
                 })
         })
@@ -48,4 +51,5 @@ async fn main() {
         .await;
 
     details.save();
+    name_to_hash_mapping.save();
 }
