@@ -56,12 +56,29 @@ impl Details {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::BASE_URL;
+    use reqwest::Client;
     use serde_json::json;
     use std::panic::catch_unwind;
     use uuid::Uuid;
 
     fn generate_path() -> String {
         format!("{}{}", Uuid::new_v4(), ".json")
+    }
+
+    #[tokio::test]
+    async fn get_version() {
+        let client = Client::new();
+        Version::fetch_latest(client, format!("{BASE_URL}/version"))
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn reject_invalid_url() {
+        let client = Client::new();
+        let version = Version::fetch_latest(client, String::default()).await;
+        assert!(version.is_err());
     }
 
     #[test]

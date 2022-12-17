@@ -1,9 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
-use arkdata::{Details, Version};
+use arkdata::{Details, Version, BASE_URL};
 use reqwest::Client;
-
-const BASE_URL: &str = "https://ark-us-static-online.yo-star.com/assetbundle/official/Android";
 
 #[tokio::main]
 async fn main() {
