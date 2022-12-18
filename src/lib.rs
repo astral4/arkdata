@@ -9,9 +9,7 @@ pub const BASE_URL: &str = "https://ark-us-static-online.yo-star.com/assetbundle
 pub const TARGET_PATH: &str = "assets";
 
 use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::io::BufReader;
-use std::marker::Sized;
+use std::{fs::File, io::BufReader, marker::Sized};
 
 pub trait Cache {
     #[must_use]
