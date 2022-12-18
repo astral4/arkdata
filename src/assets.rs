@@ -3,7 +3,7 @@ use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::{io::Cursor, path::Path, sync::Arc};
+use std::{io::Cursor, path::Path};
 use tokio::task::spawn_blocking;
 
 #[derive(Serialize, Deserialize)]
@@ -37,7 +37,7 @@ pub struct UpdateInfo {
 impl AssetData {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn download(self, client: Arc<Client>, version: String) -> Result<()> {
+    pub async fn download(self, client: Client, version: String) -> Result<()> {
         let url = format!(
             "{BASE_URL}/assets/{version}/{}",
             self.name.replace(".ab", ".dat").replace('/', "_")
@@ -67,7 +67,7 @@ impl AssetData {
 impl PackData {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn download(self, client: Arc<Client>, version: String) -> Result<()> {
+    pub async fn download(self, client: Client, version: String) -> Result<()> {
         let url = format!("{BASE_URL}/assets/{version}/{}.dat", self.name);
         let response = client
             .get(url)

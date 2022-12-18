@@ -4,7 +4,7 @@ use anyhow::Result;
 use arkdata::{Cache, Details, NameHashMapping, UpdateInfo, Version, BASE_URL, TARGET_PATH};
 use futures::Future;
 use reqwest::Client;
-use std::{fs, path::Path, sync::Arc};
+use std::{fs, path::Path};
 
 const DETAILS_PATH: &str = "details.json";
 const NAME_HASH_MAPPING_PATH: &str = "hashes.json";
@@ -26,7 +26,7 @@ pub async fn join_parallel<T: Send + 'static>(
 async fn main() {
     let mut details = Details::get(DETAILS_PATH);
     let mut name_to_hash_mapping = NameHashMapping::get(NAME_HASH_MAPPING_PATH);
-    let client = Arc::new(Client::new());
+    let client = Client::new();
 
     let data_version = Version::fetch_latest(&client, format!("{BASE_URL}/version"))
         .await
