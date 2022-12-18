@@ -40,7 +40,10 @@ impl AssetData {
     pub async fn download(self, client: Client, version: String) -> Result<()> {
         let url = format!(
             "{BASE_URL}/assets/{version}/{}",
-            self.name.replace(".ab", ".dat").replace('/', "_")
+            self.name
+                .replace(".ab", ".dat")
+                .replace(".mp4", ".dat")
+                .replace('/', "_")
         );
         let response = client
             .get(url)
