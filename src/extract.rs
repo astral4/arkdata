@@ -6,6 +6,11 @@ use std::{
 };
 use zip::ZipArchive;
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+#[cfg(unix)]
+use zip::read::ZipFile;
+
 /// # Errors
 /// Returns Err if filesystem manipuation, I/O, or unzipping fails.
 pub fn extract<S: Read + Seek>(source: S, target_dir: &Path, strip_toplevel: bool) -> Result<()> {
@@ -51,6 +56,8 @@ pub fn extract<S: Read + Seek>(source: S, target_dir: &Path, strip_toplevel: boo
             let mut outfile = fs::File::create(&outpath)?;
             copy(&mut file, &mut outfile)?;
         }
+        #[cfg(unix)]
+        set_unix_mode(&file, &outpath)?;
     }
 
     Ok(())
@@ -75,4 +82,12 @@ fn has_toplevel<S: Read + Seek>(archive: &mut ZipArchive<S>) -> Result<bool> {
         }
     }
     Ok(true)
+}
+
+#[cfg(unix)]
+fn set_unix_mode(file: &ZipFile, outpath: &Path) -> Result<()> {
+    if let Some(m) = file.unix_mode() {
+        fs::set_permissions(outpath, PermissionsExt::from_mode(m))?;
+    }
+    Ok(())
 }
