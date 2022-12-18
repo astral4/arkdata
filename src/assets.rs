@@ -1,4 +1,4 @@
-use crate::{Cache, BASE_URL, TARGET_PATH};
+use crate::{extract, Cache, BASE_URL, TARGET_PATH};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
@@ -51,9 +51,7 @@ impl AssetData {
             .await?;
 
         spawn_blocking(|| {
-            if let Err(e) =
-                zip_extract::extract(Cursor::new(response), Path::new(TARGET_PATH), false)
-            {
+            if let Err(e) = extract(Cursor::new(response), Path::new(TARGET_PATH), false) {
                 println!("{e}");
             }
         });
@@ -78,9 +76,7 @@ impl PackData {
             .await?;
 
         spawn_blocking(|| {
-            if let Err(e) =
-                zip_extract::extract(Cursor::new(response), Path::new(TARGET_PATH), false)
-            {
+            if let Err(e) = extract(Cursor::new(response), Path::new(TARGET_PATH), false) {
                 println!("{e}");
             }
         });

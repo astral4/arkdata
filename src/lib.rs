@@ -1,9 +1,12 @@
 #![warn(clippy::all, clippy::pedantic)]
+#![forbid(unsafe_code)]
 
 mod assets;
 mod details;
+mod extract;
 pub use assets::*;
 pub use details::*;
+pub use extract::*;
 
 pub const BASE_URL: &str = "https://ark-us-static-online.yo-star.com/assetbundle/official/Android";
 pub const TARGET_PATH: &str = "assets";

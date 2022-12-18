@@ -1,4 +1,5 @@
 #![warn(clippy::all, clippy::pedantic)]
+#![forbid(unsafe_code)]
 
 use anyhow::Result;
 use arkdata::{Cache, Details, NameHashMapping, UpdateInfo, Version, BASE_URL, TARGET_PATH};
