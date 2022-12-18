@@ -1,40 +1,24 @@
 #![warn(clippy::all, clippy::pedantic)]
 
+// TODO: Find a better way to satisfy the borrow checker than cloning Strings and Clients.
+
 use anyhow::Result;
-use arkdata::{AssetType, Details, NameHashMapping, UpdateInfo, Version, BASE_URL};
-use futures::{stream::FuturesUnordered, StreamExt};
+use arkdata::{Details, NameHashMapping, UpdateInfo, Version, BASE_URL, TARGET_PATH};
+use futures::Future;
 use reqwest::Client;
-use std::{fs, io::Cursor, path::Path};
-use tokio::task::spawn_blocking;
+use std::{fs, path::Path};
 
-const TARGET_PATH: &str = "assets";
-
-async fn download_asset(
-    client: &Client,
-    version: &String,
-    asset_type: AssetType,
-    name: String,
-) -> Result<()> {
-    let url = match asset_type {
-        AssetType::Asset => format!(
-            "{BASE_URL}/assets/{version}/{}",
-            name.replace(".ab", ".dat").replace('/', "_")
-        ),
-        AssetType::Pack => format!("{BASE_URL}/assets/{version}/{name}.dat"),
-    };
-    let response = client
-        .get(url)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
-
-    spawn_blocking(|| zip_extract::extract(Cursor::new(response), Path::new(TARGET_PATH), false));
-
-    println!("[SUCCESS] {name}");
-
-    Ok(())
+pub async fn join_parallel<T: Send + 'static>(
+    futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
+) -> Vec<T> {
+    let tasks: Vec<_> = futs.into_iter().map(tokio::spawn).collect();
+    // unwrap the Result because it is introduced by tokio::spawn()
+    // and isn't something our caller can handle
+    futures::future::join_all(tasks)
+        .await
+        .into_iter()
+        .map(Result::unwrap)
+        .collect()
 }
 
 #[tokio::main]
@@ -75,72 +59,55 @@ async fn main() {
     {
         // No assets have been downloaded before
         // Download asset packs
-        asset_info
-            .pack_infos
-            .into_iter()
-            .map(|pack| {
-                download_asset(
-                    &client,
-                    &details.version.resource,
-                    AssetType::Pack,
-                    pack.name,
-                )
-            })
-            .collect::<FuturesUnordered<_>>()
-            .collect::<Vec<Result<()>>>()
-            .await
-            .into_iter()
-            .filter_map(std::result::Result::err)
-            .for_each(|err| println!("{err}"));
+        join_parallel(
+            asset_info
+                .pack_infos
+                .into_iter()
+                .map(|pack| pack.download(client.clone(), details.version.resource.clone())),
+        )
+        .await
+        .into_iter()
+        .filter_map(std::result::Result::err)
+        .for_each(|err| println!("{err}"));
 
         // Some assets do not have a pack ID, so they need to be fetched separately
-        asset_info
-            .ab_infos
-            .into_iter()
-            .filter_map(|entry| {
-                name_to_hash_mapping
-                    .inner
-                    .insert(entry.name.clone(), entry.md5);
-                match entry.pack_id {
-                    Some(_) => None,
-                    None => Some(download_asset(
-                        &client,
-                        &details.version.resource,
-                        AssetType::Asset,
-                        entry.name,
-                    )),
-                }
-            })
-            .collect::<FuturesUnordered<_>>()
-            .collect::<Vec<Result<()>>>()
-            .await
-            .into_iter()
-            .filter_map(std::result::Result::err)
-            .for_each(|err| println!("{err}"));
+        join_parallel(asset_info.ab_infos.into_iter().filter_map(|entry| {
+            name_to_hash_mapping
+                .inner
+                .insert(entry.name.clone(), entry.md5.clone());
+            match entry.pack_id {
+                Some(_) => None,
+                None => Some(entry.download(client.clone(), details.version.resource.clone())),
+            }
+        }))
+        .await
+        .into_iter()
+        .filter_map(std::result::Result::err)
+        .for_each(|err| println!("{err}"));
     } else {
         // Update collection of existing assets
-        asset_info
-            .ab_infos
-            .into_iter()
-            .filter_map(|entry| {
-                name_to_hash_mapping
-                    .inner
-                    .get(&entry.name)
-                    .map_or(true, |hash| hash != &entry.md5)
-                    .then(|| {
-                        name_to_hash_mapping
-                            .inner
-                            .insert(entry.name.clone(), entry.md5);
-                        entry.name
-                    })
-            })
-            .map(|name| download_asset(&client, &details.version.resource, AssetType::Asset, name))
-            .collect::<FuturesUnordered<_>>()
-            .collect::<Vec<Result<()>>>()
-            .await
-            .into_iter()
-            .filter_map(std::result::Result::err)
-            .for_each(|err| println!("{err}"));
+        join_parallel(
+            asset_info
+                .ab_infos
+                .into_iter()
+                .filter_map(|entry| {
+                    name_to_hash_mapping
+                        .inner
+                        .get(&entry.name)
+                        .map_or(true, |hash| hash != &entry.md5)
+                        .then(|| {
+                            name_to_hash_mapping
+                                .inner
+                                .insert(entry.name.clone(), entry.md5.clone());
+                            entry
+                        })
+                })
+                .map(|entry| entry.download(client.clone(), details.version.resource.clone())),
+        )
+        .await
+        .into_iter()
+        .filter_map(std::result::Result::err)
+        .for_each(|err| println!("{err}"));
     }
 
     details.save();
