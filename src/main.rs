@@ -3,10 +3,13 @@
 // TODO: Find a better way to satisfy the borrow checker than cloning Strings and Clients.
 
 use anyhow::Result;
-use arkdata::{Details, NameHashMapping, UpdateInfo, Version, BASE_URL, TARGET_PATH};
+use arkdata::{Cache, Details, NameHashMapping, UpdateInfo, Version, BASE_URL, TARGET_PATH};
 use futures::Future;
 use reqwest::Client;
 use std::{fs, path::Path};
+
+const DETAILS_PATH: &str = "details.json";
+const NAME_HASH_MAPPING_PATH: &str = "hashes.json";
 
 pub async fn join_parallel<T: Send + 'static>(
     futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
@@ -23,16 +26,16 @@ pub async fn join_parallel<T: Send + 'static>(
 
 #[tokio::main]
 async fn main() {
-    let mut details = Details::get("details.json");
-    let mut name_to_hash_mapping = NameHashMapping::get("hashes.json");
+    let mut details = Details::get(DETAILS_PATH);
+    let mut name_to_hash_mapping = NameHashMapping::get(NAME_HASH_MAPPING_PATH);
     let client = Client::new();
 
     let data_version = Version::fetch_latest(&client, format!("{BASE_URL}/version"))
         .await
         .expect("Failed to fetch version data");
-    // if details.version == data_version {
-    //     return;
-    // }
+    if details.version == data_version {
+        return;
+    }
     details.version = data_version;
 
     let asset_info = UpdateInfo::fetch_latest(
@@ -110,6 +113,6 @@ async fn main() {
         .for_each(|err| println!("{err}"));
     }
 
-    details.save();
-    name_to_hash_mapping.save();
+    details.save(DETAILS_PATH);
+    name_to_hash_mapping.save(NAME_HASH_MAPPING_PATH);
 }

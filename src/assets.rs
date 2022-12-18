@@ -1,38 +1,18 @@
-use crate::{BASE_URL, TARGET_PATH};
+use crate::{Cache, BASE_URL, TARGET_PATH};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::{
-    fs::File,
-    io::{BufReader, Cursor},
-    path::Path,
-};
+use std::{io::Cursor, path::Path};
 use tokio::task::spawn_blocking;
 
 #[derive(Serialize, Deserialize)]
-pub struct NameHashMapping<'a> {
+pub struct NameHashMapping {
     #[serde(flatten)]
     pub inner: HashMap<String, String>,
-    #[serde(skip)]
-    path: &'a str,
 }
 
-impl NameHashMapping<'_> {
-    #[must_use]
-    pub fn get(path: &str) -> NameHashMapping {
-        let file = File::open(path).expect("Failed to open name-to-hash file");
-        let mut mapping: NameHashMapping = serde_json::from_reader(BufReader::new(file))
-            .expect("Failed to deserialize name-hash mapping");
-        mapping.path = path;
-        mapping
-    }
-
-    pub fn save(self) {
-        let file = File::create(self.path).expect("Failed to open name-to-hash file");
-        serde_json::to_writer(file, &self).expect("Failed to serialize name-hash mapping");
-    }
-}
+impl Cache for NameHashMapping {}
 
 #[derive(Deserialize)]
 pub struct AssetData {

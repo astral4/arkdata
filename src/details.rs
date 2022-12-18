@@ -1,7 +1,7 @@
+use crate::Cache;
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::BufReader};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub struct Version {
@@ -12,11 +12,9 @@ pub struct Version {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Details<'a> {
+pub struct Details {
     #[serde(flatten)]
     pub version: Version,
-    #[serde(skip)]
-    path: &'a str,
 }
 
 impl Version {
@@ -37,28 +35,14 @@ impl Version {
     }
 }
 
-impl Details<'_> {
-    #[must_use]
-    pub fn get(path: &str) -> Details {
-        let file = File::open(path).expect("Failed to open details file");
-        let mut details: Details =
-            serde_json::from_reader(BufReader::new(file)).expect("Failed to deserialize details");
-        details.path = path;
-        details
-    }
-
-    pub fn save(self) {
-        let file = File::create(self.path).expect("Failed to open details file");
-        serde_json::to_writer(file, &self).expect("Failed to serialize details");
-    }
-}
+impl Cache for Details {}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::BASE_URL;
     use serde_json::json;
-    use std::panic::catch_unwind;
+    use std::{fs::File, panic::catch_unwind};
     use uuid::Uuid;
 
     fn generate_path() -> String {
