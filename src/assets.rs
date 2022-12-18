@@ -31,12 +31,15 @@ impl NameHashMapping<'_> {
 pub struct AssetData {
     pub name: String,
     pub md5: String,
+    #[serde(rename = "pid")]
+    pub pack_id: Option<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateInfo {
     pub ab_infos: Vec<AssetData>,
+    pub pack_infos: Vec<AssetData>,
 }
 
 impl UpdateInfo {
@@ -54,4 +57,9 @@ impl UpdateInfo {
             serde_json::from_str(response.as_str()).expect("Failed to read response as UpdateInfo");
         Ok(update_info)
     }
+}
+
+pub enum AssetType {
+    Asset,
+    Pack,
 }
