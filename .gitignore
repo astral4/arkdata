@@ -24,3 +24,5 @@ Cargo.lock
 hashes.json
 assets*/
 flamegraphs/
+
+__pycache__
