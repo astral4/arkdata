@@ -53,13 +53,12 @@ impl AssetData {
             .bytes()
             .await?;
 
-        spawn_blocking(|| {
-            if let Err(e) = extract(Cursor::new(response), Path::new(TARGET_PATH), false) {
-                println!("{e}");
-            }
+        spawn_blocking(move || {
+            extract(Cursor::new(response), Path::new(TARGET_PATH), false).map_or_else(
+                |err| println!("{err}"),
+                |_| println!("[SUCCESS] {}", self.name),
+            );
         });
-
-        println!("[SUCCESS] {}", self.name);
 
         Ok(())
     }
@@ -78,13 +77,12 @@ impl PackData {
             .bytes()
             .await?;
 
-        spawn_blocking(|| {
-            if let Err(e) = extract(Cursor::new(response), Path::new(TARGET_PATH), false) {
-                println!("{e}");
-            }
+        spawn_blocking(move || {
+            extract(Cursor::new(response), Path::new(TARGET_PATH), false).map_or_else(
+                |err| println!("{err}"),
+                |_| println!("[SUCCESS] {}", self.name),
+            );
         });
-
-        println!("[SUCCESS] {}", self.name);
 
         Ok(())
     }
