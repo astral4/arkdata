@@ -1,0 +1,50 @@
+name: Fetch and convert assets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  process_assets:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+      uses: Swatinem/rust-cache@v2
+      run: cargo build --release
+
+    - name: Fetch assets
+      run: ./target/release/arkdata
+
+    - name: Install Poetry
+      run: pipx install poetry
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        cache: "poetry"
+
+    - name: Set up Python environment
+      run: |
+        poetry env use 3.11
+        poetry install
+
+    - name: Run ArkUnpacker
+      run: |
+        move ark_unpacker.py assets/ark_unpacker.py
+        move src_py assets/src_py
+        poetry run python assets/ark_unpacker.py
+        move assets/ark_unpacker.py ark_unpacker.py 
+        move assets/src_py src_py
+    
+    - name: Commit updates
+      run: |
+        git config --global user.name "Kawabot"
+        git config --global user.email "actions@users.noreply.github.com"
+        git pull --all
+        git add -A
+        git commit -m "Convert assets" -- assets/Unpacked
+        git push

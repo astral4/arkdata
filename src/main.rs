@@ -58,6 +58,7 @@ async fn main() {
         .peekable()
         .peek()
         .is_none()
+        && name_to_hash_mapping.inner.is_empty()
     {
         // No assets have been downloaded before
         // Download asset packs
