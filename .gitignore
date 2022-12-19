@@ -21,7 +21,6 @@ Cargo.lock
 
 .DS_Store
 .vscode/
-hashes.json
 assets*/
 flamegraphs/
 
