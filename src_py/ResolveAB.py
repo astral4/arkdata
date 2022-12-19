@@ -99,8 +99,6 @@ class resource:
                         if callback:
                             callback()
                 break
-        if detail and cont:
-            print(f'{color(6)}  成功导出 {cont}\t{typename}')
         return cont
 
     def rename_spine_images(self):
@@ -200,9 +198,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
     '''
     mkdir(intodir)
     cont_obj = len(env.objects)
-    if cont_obj > 2000:
-        print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
-    elif cont_obj == 0:
+    if cont_obj == 0:
         return
     ###
     reso = resource(env)
@@ -219,7 +215,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
             reso.save_all_the('AudioClip', intodir, False, subcallback)
     except BaseException as arg:
         #错误反馈
-        print(f'{color(1)}  意外错误：{arg}')
+        print(f'{arg}')
     if callback:
         callback()
         
@@ -239,7 +235,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
-    print(color(7,0,1)+"\n正在解析目录..."+color(7))
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
     destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
@@ -249,7 +244,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     
     cont_p = 0 #进度百分比计数
     if dodel:
-        print(color(7,0,1)+"\n正在初始化..."+color(7))
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
     Cprogs = Counter()
@@ -264,15 +258,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
         os.system('cls')
-        print(
-f'''{color(7)}正在批量解包...
-|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
-当前目录：\t{ospath.basename(ospath.dirname(i))}
-当前文件：\t{ospath.basename(i)}
-累计解包：\t{Cprogs.get_sum()}
-累计导出：\t{Cfiles.get_sum()}
-剩余时间：\t{round(TR.getRemainingTime(),1)}min
-''')
         ###
         Ue = UpyLoad(i) #ab文件实例化
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
@@ -287,20 +272,7 @@ f'''{color(7)}正在批量解包...
     while TC.count_subthread():
         #等待子进程结束
         os.system('cls')
-        print(
-f'''{color(7)}正在批量解包...
-|正在等待子进程结束| {color(2)}{RD.next()}{color(7)}
-剩余进程：\t{TC.count_subthread()}
-累计解包：\t{Cprogs.get_sum()}
-累计导出：\t{Cfiles.get_sum()}
-剩余时间：\t--
-''')
         time.sleep(0.2)
 
-    t2=time.time() #计时器结束
     os.system('cls')
-    print(f'{color(7,0,1)}\n批量解包结束!')
-    print(f'  累计解包 {Cprogs.get_sum()} 个文件')
-    print(f'  累计导出 {Cfiles.get_sum()} 个文件')
-    print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
     time.sleep(2)

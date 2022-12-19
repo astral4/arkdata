@@ -18,7 +18,7 @@ def Delete_File_Dir(dirName:str):
         try:
             os.remove(dirName)
         except:
-            print('  错误：删除文件失败', dirName)
+            print('Failed to delete file in: ', dirName)
             return False
     elif os.path.isdir(dirName):
         #若是文件夹
@@ -28,7 +28,7 @@ def Delete_File_Dir(dirName:str):
         try:
             os.rmdir(dirName)
         except:
-            print('  错误：删除目录失败', dirName)
+            print('Failed to delete folder: ', dirName)
 
 def mkdir(path:str, echo:bool=False):
     '''
@@ -44,14 +44,14 @@ def mkdir(path:str, echo:bool=False):
             os.makedirs(path)
             if echo:
                 if len(path) > 24:
-                    print(f'  目录已创建 ...{path[-20:]}')
+                    print(f'Created directory: {path[-20:]}')
                 else:
-                    print(f'  目录已创建 {path}')
+                    print(f'Created directory: {path}')
             return True
         except:
             #错误
             if echo:
-                print("  目录创建失败")
+                print("Failed to create directory")
             return False
     else:
         #目录已存在

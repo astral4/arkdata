@@ -31,7 +31,6 @@ def combine_rgb_a(fp_rgb:str, fp_a:str):
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
         IM2 = IM2.resize(IM1.size, Image.ANTIALIAS)
-        #print(f'{color(3)}  警告：通道图尺寸不一，已缩放处理')    
     IM3 = Image.new('RGBA', IM1.size) #透明抹除全黑图实例化
     IM4 = IM2.point(lambda x:0 if x>0 else 255) #透明抹除反色图实例化
     IM1.putalpha(IM2) #RGB通道图使用A通道图作为alpha层
@@ -75,10 +74,6 @@ def alpha_resolve(fp:str):
         return spines[0][0] #成功，唯一图片的文件路径
     else:
         spines = sorted(spines, key=lambda x:-x[1]) #根据置信度降序排序
-        #print(f'{color(6)}  匹配到 {ospath.basename(spines[0][0])}\n  置信度 {spines[0][1]}')
-        if spines[0][1] < 128:
-            pass
-            #print(f'{color(3)}  警告：置信度较低，可能匹配错误')
         return spines[0][0] #成功，返回置信度最高的图片的文件路径
 
 def showimg(fp:str):
@@ -143,11 +138,11 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
         return 3 #不是指定的A通道图，退出
     ###
     if not ospath.isfile(fp):
-        print(f'{color(1)}  错误：alpha通道图缺失{color(7)} {fp}')
+        print(f'{color(1)}  Error: alpha channel image missing {color(7)} {fp}')
         if callback: callback()
         return 4 #找不到对应的A通道图，退出
     if not ospath.isfile(fp2):
-        print(f'{color(1)}  错误：RGB通道图缺失{color(7)} {fp2}')
+        print(f'{color(1)}  Error: RGB channel image missing {color(7)} {fp2}')
         if callback: callback()
         return 5 #找不到对应的RGB通道图，退出
     #print(color(7)+fp2)
@@ -161,7 +156,7 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
             if callback: callback()
             return 6 #未保存，返回6
     else:
-        print(f'{color(1)}  错误：通道图合成失败{color(7)}')
+        print(f'{color(1)} Error: image combining failed {color(7)}')
         if callback: callback()
         return -1 #图片合成函数返回了失败的结果，退出
 
@@ -177,7 +172,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
-    print(f'{color(7,0,1)}\n正在解析目录...{color(7)}')
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
     destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
@@ -189,7 +183,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     cont_p = 0 #进度百分比计数
 
     if dodel:
-        print(color(7,0,1)+"\n正在初始化..."+color(7))
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
     Cprogs = Counter()
@@ -204,15 +197,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
         os.system('cls')
-        print(
-f'''{color(7)}正在批量解包...
-|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
-当前目录：\t{ospath.basename(ospath.dirname(i))}
-当前文件：\t{ospath.basename(i)}
-累计处理：\t{Cprogs.get_sum()}
-累计导出：\t{Cfiles.get_sum()}
-剩余时间：\t{round(TR.getRemainingTime(),1)}min
-''')
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
@@ -224,19 +208,11 @@ f'''{color(7)}正在批量解包...
     while TC.count_subthread():
         #等待子进程结束
         os.system('cls')
-        print(
-f'''{color(7)}正在批量解包...
-|正在等待子进程结束| {color(2)}{RD.next()}{color(7)}
-剩余进程：\t{TC.count_subthread()}
-累计处理：\t{Cprogs.get_sum()}
-累计导出：\t{Cfiles.get_sum()}
-剩余时间：\t--
-''')
         time.sleep(0.2)
 
     t2=time.time() #计时器结束
     os.system('cls')
-    print(f'{color(7,0,1)}\n批量合并图片结束!')
-    print(f'  累计导出 {Cfiles.get_sum()} 张照片')
-    print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
+    print(f'{color(7,0,1)}\nFinished!')
+    print(f'Converted {Cfiles.get_sum()} images')
+    print(f'in {round(t2-t1, 1)} seconds{color(7)}')
     time.sleep(2)

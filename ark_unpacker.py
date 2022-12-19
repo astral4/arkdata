@@ -45,31 +45,6 @@ AU_i18n='zh-CN'
 MAX_THS=21
 
 
-def prt_homepage():
-    '''
-    #### 打印主页
-    :returns: (none);
-    '''
-    os.system('cls')
-    os.chdir('.')
-    print(f'{color(7,0,1)}欢迎使用ArkUnpacker {AU_ver}')
-    print('='*20)
-    print(f'{color(7)}模式选择：{color(6)}')
-    print('1: 一键执行\n2: 自定义资源解包\n3: 自定义图片合并\n0: 退出')
-    print(f'{color(7)}输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker/')
-
-def prt_subtitle(msg:str):
-    '''
-    #### 打印子标题
-    :param msg: 标题;
-    :returns: (none);
-    '''
-    os.system('cls')
-    os.chdir('.')
-    print(f'{color(7,0,1)}{"="*10}')
-    print(msg)
-    print(f'{"="*10}\n{color(7)}')
-
 def input_allow(msg:str,allow:list,excpt:str):
     '''
     #### 获取合规的键盘命令输入
@@ -116,16 +91,13 @@ def run_quickaccess():
     destdir = f'Unpacked'
     ignore = [".vscode","__pycache__",".git"]
     ###
-    prt_subtitle('步骤1|资源解包')
     time.sleep(1)
     AU_Rs.main('.',destdir)
     ###
-    prt_subtitle('步骤2|合并图片')
     time.sleep(1)
     AU_Cb.main(destdir,f'Combined_{int(time.time())}')
 
 if __name__ == '__main__':
         os.system('title ArkUnpacker')
-        prt_homepage()
         run_quickaccess()
         exit()
