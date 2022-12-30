@@ -23,5 +23,4 @@ Cargo.lock
 .vscode/
 assets*/
 flamegraphs/
-
 __pycache__

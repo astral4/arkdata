@@ -8,8 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-UnityPy = "^1.9.24"
-Pillow = "^9.3.0"
+kawapack = "^0.3.1"
 
 
 [build-system]
