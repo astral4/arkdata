@@ -1,4 +1,4 @@
-use crate::{extract, Cache, BASE_URL, TARGET_PATH};
+use crate::{extract, Cache, CONFIG};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
@@ -39,7 +39,8 @@ impl AssetData {
     /// Returns Err if the HTTP response fetching fails in some way.
     pub async fn download(self, client: Client, version: String) -> Result<()> {
         let url = format!(
-            "{BASE_URL}/assets/{version}/{}",
+            "{}/assets/{version}/{}",
+            CONFIG.base_server_url,
             self.name
                 .replace(".ab", ".dat")
                 .replace(".mp4", ".dat")
@@ -54,7 +55,7 @@ impl AssetData {
             .await?;
 
         spawn_blocking(move || {
-            extract(Cursor::new(response), Path::new(TARGET_PATH), false).map_or_else(
+            extract(Cursor::new(response), Path::new(&CONFIG.output_dir), false).map_or_else(
                 |err| println!("{err}"),
                 |_| println!("[SUCCESS] {}", self.name),
             );
@@ -68,7 +69,10 @@ impl PackData {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
     pub async fn download(self, client: Client, version: String) -> Result<()> {
-        let url = format!("{BASE_URL}/assets/{version}/{}.dat", self.name);
+        let url = format!(
+            "{}/assets/{version}/{}.dat",
+            CONFIG.base_server_url, self.name
+        );
         let response = client
             .get(url)
             .send()
@@ -78,7 +82,7 @@ impl PackData {
             .await?;
 
         spawn_blocking(move || {
-            extract(Cursor::new(response), Path::new(TARGET_PATH), false).map_or_else(
+            extract(Cursor::new(response), Path::new(&CONFIG.output_dir), false).map_or_else(
                 |err| println!("{err}"),
                 |_| println!("[SUCCESS] {}", self.name),
             );

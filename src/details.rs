@@ -40,7 +40,7 @@ impl Cache for Details {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::BASE_URL;
+    use crate::CONFIG;
     use serde_json::json;
     use std::{fs::File, panic::catch_unwind};
     use uuid::Uuid;
@@ -52,7 +52,7 @@ mod tests {
     #[tokio::test]
     async fn get_version() {
         let client = Client::new();
-        Version::fetch_latest(&client, format!("{BASE_URL}/version"))
+        Version::fetch_latest(&client, format!("{}/version", CONFIG.base_server_url))
             .await
             .unwrap();
     }

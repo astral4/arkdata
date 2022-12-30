@@ -2,13 +2,10 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use arkdata::{Cache, Details, NameHashMapping, UpdateInfo, Version, BASE_URL, TARGET_PATH};
+use arkdata::{Cache, Details, NameHashMapping, UpdateInfo, Version, CONFIG};
 use futures::Future;
 use reqwest::Client;
 use std::{fs, path::Path};
-
-const DETAILS_PATH: &str = "details.json";
-const NAME_HASH_MAPPING_PATH: &str = "hashes.json";
 
 pub async fn join_parallel<T: Send + 'static>(
     futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
@@ -25,14 +22,15 @@ pub async fn join_parallel<T: Send + 'static>(
 
 #[tokio::main]
 async fn main() {
-    let mut details = Details::get(DETAILS_PATH);
-    let mut name_to_hash_mapping = NameHashMapping::get(NAME_HASH_MAPPING_PATH);
+    let mut details = Details::get(&CONFIG.details_path);
+    let mut name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
     let client = Client::new();
 
-    let data_version = Version::fetch_latest(&client, format!("{BASE_URL}/version"))
-        .await
-        .expect("Failed to fetch version data");
-    if details.version == data_version {
+    let data_version =
+        Version::fetch_latest(&client, format!("{}/version", CONFIG.base_server_url))
+            .await
+            .expect("Failed to fetch version data");
+    if !CONFIG.force_fetch && details.version == data_version {
         return;
     }
     details.version = data_version;
@@ -40,14 +38,14 @@ async fn main() {
     let asset_info = UpdateInfo::fetch_latest(
         &client,
         format!(
-            "{BASE_URL}/assets/{}/hot_update_list.json",
-            details.version.resource
+            "{}/assets/{}/hot_update_list.json",
+            CONFIG.base_server_url, details.version.resource
         ),
     )
     .await
     .expect("Failed to fetch asset info list");
 
-    let target_path = Path::new(TARGET_PATH);
+    let target_path = Path::new(&CONFIG.output_dir);
 
     if !target_path.is_dir() {
         fs::create_dir(target_path).expect("Failed to create missing target directory");
@@ -113,6 +111,8 @@ async fn main() {
         .for_each(|err| println!("{err}"));
     }
 
-    details.save(DETAILS_PATH);
-    name_to_hash_mapping.save(NAME_HASH_MAPPING_PATH);
+    if CONFIG.update_cache {
+        details.save(&CONFIG.details_path);
+        name_to_hash_mapping.save(&CONFIG.hashes_path);
+    }
 }
