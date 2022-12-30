@@ -15,8 +15,15 @@ pub struct Settings {
     pub details_path: String,
     pub hashes_path: String,
     pub force_fetch: bool,
-    pub update_cache: bool,
+    pub path_start_patterns: Option<Vec<String>>,
     pub output_dir: String,
+    pub update_cache: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct SettingsWrapper {
+    fetch_settings: Settings,
 }
 
 impl Settings {
@@ -26,8 +33,9 @@ impl Settings {
             .build()
             .expect("Failed to read configuration");
         let mut settings = config
-            .try_deserialize::<Self>()
-            .expect("Failed to deserialize configuration file");
+            .try_deserialize::<SettingsWrapper>()
+            .expect("Failed to deserialize configuration file")
+            .fetch_settings;
         settings.base_server_url = String::from(match settings.server {
             Server::US => "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
             Server::CN => todo!(),

@@ -92,6 +92,11 @@ async fn main() {
             asset_info
                 .ab_infos
                 .into_iter()
+                .filter(|entry| {
+                    CONFIG.path_start_patterns.as_ref().map_or(true, |pats| {
+                        pats.iter().any(|pat| entry.name.starts_with(pat))
+                    })
+                })
                 .filter_map(|entry| {
                     name_to_hash_mapping
                         .inner

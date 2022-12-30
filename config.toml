@@ -1,6 +1,8 @@
+[fetch-settings]
 server = "US"
 details_path = "details.json"
 hashes_path = "hashes.json"
 force_fetch = true
-update_cache = false
+path_start_patterns = ["gamedata/", "arts/charavatars/"]
 output_dir = "assets"
+update_cache = false
