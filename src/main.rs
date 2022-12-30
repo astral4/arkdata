@@ -101,7 +101,7 @@ async fn main() {
                     name_to_hash_mapping
                         .inner
                         .get(&entry.name)
-                        .map_or(true, |hash| hash != &entry.md5)
+                        .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
                         .then(|| {
                             name_to_hash_mapping
                                 .inner

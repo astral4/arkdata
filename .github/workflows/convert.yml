@@ -36,7 +36,7 @@ jobs:
         poetry env use 3.11
         poetry install
 
-    - name: Run kawapack
+    - name: Unpack assets
       run: poetry run python main.py
     
     - name: Commit updates
@@ -45,5 +45,5 @@ jobs:
         git config --global user.email "actions@users.noreply.github.com"
         git pull --all
         git add -A
-        git commit -m "Convert assets"
+        git commit -m "Update assets"
         git push

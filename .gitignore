@@ -12,4 +12,5 @@ target/
 .DS_Store
 .vscode/
 assets/
+!results/assets
 __pycache__
