@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use arkdata::{Cache, Details, NameHashMapping, UpdateInfo, Version, CONFIG};
+use arkdata::{download_asset, Cache, Details, NameHashMapping, UpdateInfo, Version, CONFIG};
 use futures::Future;
 use reqwest::Client;
 use std::{fs, path::Path};
@@ -60,12 +60,9 @@ async fn main() {
     {
         // No assets have been downloaded before
         // Download asset packs
-        join_parallel(
-            asset_info
-                .pack_infos
-                .into_iter()
-                .map(|pack| pack.download(client.clone(), details.version.resource.clone())),
-        )
+        join_parallel(asset_info.pack_infos.into_iter().map(|pack| {
+            download_asset(pack.name, client.clone(), details.version.resource.clone())
+        }))
         .await
         .into_iter()
         .filter_map(std::result::Result::err)
@@ -78,7 +75,11 @@ async fn main() {
                 .insert(entry.name.clone(), entry.md5.clone());
             match entry.pack_id {
                 Some(_) => None,
-                None => Some(entry.download(client.clone(), details.version.resource.clone())),
+                None => Some(download_asset(
+                    entry.name,
+                    client.clone(),
+                    details.version.resource.clone(),
+                )),
             }
         }))
         .await
@@ -103,7 +104,9 @@ async fn main() {
                             entry
                         })
                 })
-                .map(|entry| entry.download(client.clone(), details.version.resource.clone())),
+                .map(|entry| {
+                    download_asset(entry.name, client.clone(), details.version.resource.clone())
+                }),
         )
         .await
         .into_iter()

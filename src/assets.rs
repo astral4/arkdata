@@ -14,6 +14,32 @@ pub struct NameHashMapping {
 
 impl Cache for NameHashMapping {}
 
+/// # Errors
+/// Returns Err if the HTTP response fetching fails in some way.
+pub async fn download_asset(name: String, client: Client, version: String) -> Result<()> {
+    let url = format!(
+        "{}/assets/{version}/{}.dat",
+        CONFIG.base_server_url,
+        name.replace(".ab", "")
+            .replace(".mp4", "")
+            .replace('/', "_")
+    );
+    let response = client
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .bytes()
+        .await?;
+
+    spawn_blocking(move || {
+        extract(Cursor::new(response), Path::new(&CONFIG.output_dir), false)
+            .map_or_else(|err| println!("{err}"), |_| println!("[SUCCESS] {name}"));
+    });
+
+    Ok(())
+}
+
 #[derive(Deserialize)]
 pub struct AssetData {
     pub name: String,
@@ -24,7 +50,7 @@ pub struct AssetData {
 
 #[derive(Deserialize)]
 pub struct PackData {
-    name: String,
+    pub name: String,
 }
 
 #[derive(Deserialize)]
@@ -32,64 +58,6 @@ pub struct PackData {
 pub struct UpdateInfo {
     pub ab_infos: Vec<AssetData>,
     pub pack_infos: Vec<PackData>,
-}
-
-impl AssetData {
-    /// # Errors
-    /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn download(self, client: Client, version: String) -> Result<()> {
-        let url = format!(
-            "{}/assets/{version}/{}",
-            CONFIG.base_server_url,
-            self.name
-                .replace(".ab", ".dat")
-                .replace(".mp4", ".dat")
-                .replace('/', "_")
-        );
-        let response = client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await?;
-
-        spawn_blocking(move || {
-            extract(Cursor::new(response), Path::new(&CONFIG.output_dir), false).map_or_else(
-                |err| println!("{err}"),
-                |_| println!("[SUCCESS] {}", self.name),
-            );
-        });
-
-        Ok(())
-    }
-}
-
-impl PackData {
-    /// # Errors
-    /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn download(self, client: Client, version: String) -> Result<()> {
-        let url = format!(
-            "{}/assets/{version}/{}.dat",
-            CONFIG.base_server_url, self.name
-        );
-        let response = client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await?;
-
-        spawn_blocking(move || {
-            extract(Cursor::new(response), Path::new(&CONFIG.output_dir), false).map_or_else(
-                |err| println!("{err}"),
-                |_| println!("[SUCCESS] {}", self.name),
-            );
-        });
-
-        Ok(())
-    }
 }
 
 impl UpdateInfo {
