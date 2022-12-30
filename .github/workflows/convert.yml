@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  process_assets:
-    runs-on: windows-latest
+  main:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -36,13 +36,8 @@ jobs:
         poetry env use 3.11
         poetry install
 
-    - name: Run ArkUnpacker
-      run: |
-        move ark_unpacker.py assets/ark_unpacker.py
-        move src_py assets/src_py
-        poetry run python assets/ark_unpacker.py
-        move assets/ark_unpacker.py ark_unpacker.py 
-        move assets/src_py src_py
+    - name: Unpack assets
+      run: poetry run python main.py
     
     - name: Commit updates
       run: |
@@ -50,5 +45,5 @@ jobs:
         git config --global user.email "actions@users.noreply.github.com"
         git pull --all
         git add -A
-        git commit -m "Convert assets" -- assets/Unpacked
+        git commit -m "Update assets"
         git push

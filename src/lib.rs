@@ -4,15 +4,16 @@
 mod assets;
 mod details;
 mod extract;
+mod settings;
 pub use assets::*;
 pub use details::*;
 pub use extract::*;
 
-pub const BASE_URL: &str = "https://ark-us-static-online.yo-star.com/assetbundle/official/Android";
-pub const TARGET_PATH: &str = "assets";
-
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::BufReader, marker::Sized};
+
+pub static CONFIG: Lazy<settings::Settings> = Lazy::new(settings::Settings::get);
 
 pub trait Cache {
     #[must_use]
@@ -31,7 +32,7 @@ pub trait Cache {
         for<'a> Self: Serialize,
     {
         let file = File::create(path).unwrap_or_else(|_| panic!("Failed to open {path}"));
-        serde_json::to_writer(file, &self)
+        serde_json::to_writer_pretty(file, &self)
             .unwrap_or_else(|_| panic!("Failed to serialize to {path}"));
     }
 }
