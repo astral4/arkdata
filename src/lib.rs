@@ -5,15 +5,15 @@ mod assets;
 mod details;
 mod extract;
 mod settings;
-pub use assets::*;
+pub use assets::{download_asset, NameHashMapping, UpdateInfo};
 pub use details::*;
-pub use extract::*;
+pub use settings::CONFIG;
 
-use once_cell::sync::Lazy;
+use anyhow::Result;
+use async_trait::async_trait;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::BufReader, marker::Sized};
-
-pub static CONFIG: Lazy<settings::Settings> = Lazy::new(settings::Settings::get);
+use std::{any::type_name, fs::File, io::BufReader, marker::Sized};
 
 pub trait Cache {
     #[must_use]
@@ -24,7 +24,7 @@ pub trait Cache {
         let file = File::open(path).unwrap_or_else(|_| panic!("Failed to open {path}"));
 
         serde_json::from_reader(BufReader::new(file))
-            .unwrap_or_else(|_| panic!("Failed to deserialize to {path}"))
+            .unwrap_or_else(|_| panic!("Failed to deserialize from {path}"))
     }
 
     fn save(&self, path: &str)
@@ -34,5 +34,26 @@ pub trait Cache {
         let file = File::create(path).unwrap_or_else(|_| panic!("Failed to open {path}"));
         serde_json::to_writer_pretty(file, &self)
             .unwrap_or_else(|_| panic!("Failed to serialize to {path}"));
+    }
+}
+
+#[async_trait]
+pub trait Fetch {
+    async fn fetch(client: &Client, url: &str) -> Result<Self>
+    where
+        for<'de> Self: Sized + Deserialize<'de>,
+    {
+        let response = client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
+
+        let update_info: Self = serde_json::from_str(response.as_str())
+            .unwrap_or_else(|_| panic!("Failed to read response as {}", type_name::<Self>()));
+
+        Ok(update_info)
     }
 }

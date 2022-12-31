@@ -1,6 +1,4 @@
-use crate::Cache;
-use anyhow::Result;
-use reqwest::Client;
+use crate::{Cache, Fetch};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
@@ -11,28 +9,12 @@ pub struct Version {
     client: String,
 }
 
+impl Fetch for Version {}
+
 #[derive(Serialize, Deserialize)]
 pub struct Details {
     #[serde(flatten)]
     pub version: Version,
-}
-
-impl Version {
-    /// # Errors
-    /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn fetch_latest(client: &Client, url: String) -> Result<Self> {
-        let response = client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
-
-        let version: Self =
-            serde_json::from_str(response.as_str()).expect("Failed to read response as Version");
-        Ok(version)
-    }
 }
 
 impl Cache for Details {}
@@ -40,7 +22,8 @@ impl Cache for Details {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::CONFIG;
+    use crate::{Fetch, CONFIG};
+    use reqwest::Client;
     use serde_json::json;
     use std::{fs::File, panic::catch_unwind};
     use uuid::Uuid;
@@ -52,7 +35,7 @@ mod tests {
     #[tokio::test]
     async fn get_version() {
         let client = Client::new();
-        Version::fetch_latest(&client, format!("{}/version", CONFIG.base_server_url))
+        Version::fetch(&client, CONFIG.server_url.version.as_str())
             .await
             .unwrap();
     }
@@ -60,7 +43,7 @@ mod tests {
     #[tokio::test]
     async fn reject_invalid_url() {
         let client = Client::new();
-        let version = Version::fetch_latest(&client, String::default()).await;
+        let version = Version::fetch(&client, "").await;
         assert!(version.is_err());
     }
 

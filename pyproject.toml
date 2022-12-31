@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-kawapack = "^0.3.1"
+kawapack = "^0.5.0"
 
 
 [build-system]
