@@ -3,7 +3,7 @@ use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::{io::Cursor, path::Path};
+use std::io::Cursor;
 use tokio::task::spawn_blocking;
 
 #[derive(Serialize, Deserialize)]
@@ -34,7 +34,7 @@ pub async fn download_asset(name: String, client: Client, version: String) -> Re
         .await?;
 
     spawn_blocking(move || {
-        extract(Cursor::new(response), Path::new(&CONFIG.output_dir), false)
+        extract(Cursor::new(response), &CONFIG.output_path, false)
             .map_or_else(|err| println!("{err}"), |_| println!("[SUCCESS] {name}"));
     });
 

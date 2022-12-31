@@ -1,5 +1,7 @@
 use config::{Config, File, FileFormat};
+use once_cell::sync::Lazy;
 use serde::Deserialize;
+use std::path::PathBuf;
 
 #[derive(Deserialize)]
 enum Server {
@@ -21,8 +23,9 @@ pub struct Settings {
     pub details_path: String,
     pub hashes_path: String,
     pub force_fetch: bool,
-    pub path_start_patterns: Option<Vec<String>>,
-    pub output_dir: String,
+    output_dir: String,
+    #[serde(skip)]
+    pub output_path: PathBuf,
     pub update_cache: bool,
 }
 
@@ -32,32 +35,35 @@ struct SettingsWrapper {
     fetch_settings: Settings,
 }
 
-impl Settings {
-    pub fn get() -> Self {
-        let config = Config::builder()
-            .add_source(File::new("config.toml", FileFormat::Toml))
-            .build()
-            .expect("Failed to read configuration");
-        let mut settings = config
-            .try_deserialize::<SettingsWrapper>()
-            .expect("Failed to deserialize configuration file")
-            .fetch_settings;
-        settings.server_url = match settings.server {
-            Server::US => ServerLink {
-                version: String::from(
-                    "https://ark-us-static-online.yo-star.com/assetbundle/official/Android/version",
-                ),
-                base: String::from(
-                    "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
-                ),
-            },
-            Server::CN => ServerLink {
-                version: String::from(
-                    "https://ak-conf.hypergryph.com/config/prod/official/Android/version",
-                ),
-                base: String::from("https://ak.hycdn.cn/assetbundle/official/Android"),
-            },
-        };
-        settings
-    }
-}
+pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
+    let config = Config::builder()
+        .add_source(File::new("config.toml", FileFormat::Toml))
+        .build()
+        .expect("Failed to read configuration");
+
+    let mut settings = config
+        .try_deserialize::<SettingsWrapper>()
+        .expect("Failed to deserialize configuration file")
+        .fetch_settings;
+
+    settings.server_url = match settings.server {
+        Server::US => ServerLink {
+            version: String::from(
+                "https://ark-us-static-online.yo-star.com/assetbundle/official/Android/version",
+            ),
+            base: String::from(
+                "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
+            ),
+        },
+        Server::CN => ServerLink {
+            version: String::from(
+                "https://ak-conf.hypergryph.com/config/prod/official/Android/version",
+            ),
+            base: String::from("https://ak.hycdn.cn/assetbundle/official/Android"),
+        },
+    };
+
+    settings.output_path = PathBuf::from(&settings.output_dir);
+
+    settings
+});

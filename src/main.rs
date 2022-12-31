@@ -7,9 +7,9 @@ use arkdata::{
 };
 use futures::Future;
 use reqwest::Client;
-use std::{fs, path::Path};
+use std::fs;
 
-pub async fn join_parallel<T: Send + 'static>(
+async fn join_parallel<T: Send + 'static>(
     futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
 ) -> Vec<T> {
     let tasks: Vec<_> = futs.into_iter().map(tokio::spawn).collect();
@@ -49,19 +49,11 @@ async fn main() {
         .expect("Failed to fetch asset info list")
     };
 
-    let target_path = Path::new(&CONFIG.output_dir);
-
-    if !target_path.is_dir() {
-        fs::create_dir(target_path).expect("Failed to create missing target directory");
+    if !CONFIG.output_path.is_dir() {
+        fs::create_dir(&CONFIG.output_path).expect("Failed to create missing target directory");
     }
 
-    if fs::read_dir(target_path)
-        .expect("Failed to read contents of target directory")
-        .peekable()
-        .peek()
-        .is_none()
-        && name_to_hash_mapping.inner.is_empty()
-    {
+    if name_to_hash_mapping.inner.is_empty() {
         // No assets have been downloaded before
         // Download asset packs
         join_parallel(asset_info.pack_infos.into_iter().map(|pack| {
@@ -73,18 +65,12 @@ async fn main() {
         .for_each(|err| println!("{err}"));
 
         // Some assets do not have a pack ID, so they need to be fetched separately
-        join_parallel(asset_info.ab_infos.into_iter().filter_map(|entry| {
-            name_to_hash_mapping
-                .inner
-                .insert(entry.name.clone(), entry.md5.clone());
-            match entry.pack_id {
-                Some(_) => None,
-                None => Some(download_asset(
-                    entry.name,
-                    client.clone(),
-                    details.version.resource.clone(),
-                )),
-            }
+        join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
+            entry.pack_id.is_none().then_some(download_asset(
+                entry.name.clone(),
+                client.clone(),
+                details.version.resource.clone(),
+            ))
         }))
         .await
         .into_iter()
@@ -92,31 +78,19 @@ async fn main() {
         .for_each(|err| println!("{err}"));
     } else {
         // Update collection of existing assets
-        join_parallel(
-            asset_info
-                .ab_infos
-                .into_iter()
-                .filter(|entry| {
-                    CONFIG.path_start_patterns.as_ref().map_or(true, |pats| {
-                        pats.iter().any(|pat| entry.name.starts_with(pat))
-                    })
+        join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
+            name_to_hash_mapping
+                .inner
+                .get(&entry.name)
+                .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
+                .then(|| {
+                    download_asset(
+                        entry.name.clone(),
+                        client.clone(),
+                        details.version.resource.clone(),
+                    )
                 })
-                .filter_map(|entry| {
-                    name_to_hash_mapping
-                        .inner
-                        .get(&entry.name)
-                        .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
-                        .then(|| {
-                            name_to_hash_mapping
-                                .inner
-                                .insert(entry.name.clone(), entry.md5.clone());
-                            entry
-                        })
-                })
-                .map(|entry| {
-                    download_asset(entry.name, client.clone(), details.version.resource.clone())
-                }),
-        )
+        }))
         .await
         .into_iter()
         .filter_map(std::result::Result::err)
@@ -125,6 +99,17 @@ async fn main() {
 
     if CONFIG.update_cache {
         details.save(&CONFIG.details_path);
+
+        name_to_hash_mapping
+            .inner
+            .extend(asset_info.ab_infos.into_iter().filter_map(|entry| {
+                CONFIG
+                    .output_path
+                    .join(&entry.name)
+                    .is_file()
+                    .then_some((entry.name, entry.md5))
+            }));
+
         name_to_hash_mapping.save(&CONFIG.hashes_path);
     }
 }

@@ -7,15 +7,13 @@ mod extract;
 mod settings;
 pub use assets::{download_asset, NameHashMapping, UpdateInfo};
 pub use details::*;
+pub use settings::CONFIG;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use once_cell::sync::Lazy;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{any::type_name, fs::File, io::BufReader, marker::Sized};
-
-pub static CONFIG: Lazy<settings::Settings> = Lazy::new(settings::Settings::get);
 
 pub trait Cache {
     #[must_use]
@@ -26,7 +24,7 @@ pub trait Cache {
         let file = File::open(path).unwrap_or_else(|_| panic!("Failed to open {path}"));
 
         serde_json::from_reader(BufReader::new(file))
-            .unwrap_or_else(|_| panic!("Failed to deserialize to {path}"))
+            .unwrap_or_else(|_| panic!("Failed to deserialize from {path}"))
     }
 
     fn save(&self, path: &str)
