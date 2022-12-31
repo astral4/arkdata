@@ -9,6 +9,13 @@ use futures::Future;
 use reqwest::Client;
 use std::fs;
 
+fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
+    results
+        .into_iter()
+        .filter_map(std::result::Result::err)
+        .for_each(|err| println!("{err}"));
+}
+
 async fn join_parallel<T: Send + 'static>(
     futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
 ) -> Vec<T> {
@@ -56,45 +63,42 @@ async fn main() {
     if name_to_hash_mapping.inner.is_empty() {
         // No assets have been downloaded before
         // Download asset packs
-        join_parallel(asset_info.pack_infos.into_iter().map(|pack| {
-            download_asset(pack.name, client.clone(), details.version.resource.clone())
-        }))
-        .await
-        .into_iter()
-        .filter_map(std::result::Result::err)
-        .for_each(|err| println!("{err}"));
+        log_errors(
+            join_parallel(asset_info.pack_infos.into_iter().map(|pack| {
+                download_asset(pack.name, client.clone(), details.version.resource.clone())
+            }))
+            .await,
+        );
 
         // Some assets do not have a pack ID, so they need to be fetched separately
-        join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
-            entry.pack_id.is_none().then_some(download_asset(
-                entry.name.clone(),
-                client.clone(),
-                details.version.resource.clone(),
-            ))
-        }))
-        .await
-        .into_iter()
-        .filter_map(std::result::Result::err)
-        .for_each(|err| println!("{err}"));
+        log_errors(
+            join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
+                entry.pack_id.is_none().then_some(download_asset(
+                    entry.name.clone(),
+                    client.clone(),
+                    details.version.resource.clone(),
+                ))
+            }))
+            .await,
+        );
     } else {
         // Update collection of existing assets
-        join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
-            name_to_hash_mapping
-                .inner
-                .get(&entry.name)
-                .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
-                .then(|| {
-                    download_asset(
-                        entry.name.clone(),
-                        client.clone(),
-                        details.version.resource.clone(),
-                    )
-                })
-        }))
-        .await
-        .into_iter()
-        .filter_map(std::result::Result::err)
-        .for_each(|err| println!("{err}"));
+        log_errors(
+            join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
+                name_to_hash_mapping
+                    .inner
+                    .get(&entry.name)
+                    .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
+                    .then(|| {
+                        download_asset(
+                            entry.name.clone(),
+                            client.clone(),
+                            details.version.resource.clone(),
+                        )
+                    })
+            }))
+            .await,
+        );
     }
 
     if CONFIG.update_cache {
