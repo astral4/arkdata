@@ -25,6 +25,7 @@ pub async fn download_asset(name: String, client: Client, version: String) -> Re
             .replace('/', "_")
             .replace('#', "__")
     );
+
     let response = client
         .get(url)
         .send()

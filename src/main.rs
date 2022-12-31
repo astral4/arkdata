@@ -5,14 +5,15 @@ use anyhow::Result;
 use arkdata::{
     download_asset, Cache, Details, Fetch, NameHashMapping, UpdateInfo, Version, CONFIG,
 };
-use futures::Future;
+use futures::{future::join_all, Future};
 use reqwest::Client;
 use std::fs;
+use tap::Pipe;
 
 fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
     results
         .into_iter()
-        .filter_map(std::result::Result::err)
+        .filter_map(Result::err)
         .for_each(|err| println!("{err}"));
 }
 
@@ -22,7 +23,7 @@ async fn join_parallel<T: Send + 'static>(
     let tasks: Vec<_> = futs.into_iter().map(tokio::spawn).collect();
     // unwrap the Result because it is introduced by tokio::spawn()
     // and isn't something our caller can handle
-    futures::future::join_all(tasks)
+    join_all(tasks)
         .await
         .into_iter()
         .map(Result::unwrap)
@@ -57,34 +58,42 @@ async fn main() {
     };
 
     if !CONFIG.output_path.is_dir() {
-        fs::create_dir(&CONFIG.output_path).expect("Failed to create missing target directory");
+        fs::create_dir(&CONFIG.output_path).expect("Failed to create output directory");
     }
 
     if name_to_hash_mapping.inner.is_empty() {
         // No assets have been downloaded before
         // Download asset packs
-        log_errors(
-            join_parallel(asset_info.pack_infos.into_iter().map(|pack| {
-                download_asset(pack.name, client.clone(), details.version.resource.clone())
-            }))
-            .await,
-        );
+        asset_info
+            .pack_infos
+            .into_iter()
+            .map(|pack| download_asset(pack.name, client.clone(), details.version.resource.clone()))
+            .pipe(join_parallel)
+            .await
+            .pipe(log_errors);
 
         // Some assets do not have a pack ID, so they need to be fetched separately
-        log_errors(
-            join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
-                entry.pack_id.is_none().then_some(download_asset(
-                    entry.name.clone(),
-                    client.clone(),
-                    details.version.resource.clone(),
-                ))
-            }))
-            .await,
-        );
+        asset_info
+            .ab_infos
+            .iter()
+            .filter_map(|entry| {
+                entry.pack_id.is_none().then(|| {
+                    download_asset(
+                        entry.name.clone(),
+                        client.clone(),
+                        details.version.resource.clone(),
+                    )
+                })
+            })
+            .pipe(join_parallel)
+            .await
+            .pipe(log_errors);
     } else {
         // Update collection of existing assets
-        log_errors(
-            join_parallel(asset_info.ab_infos.iter().filter_map(|entry| {
+        asset_info
+            .ab_infos
+            .iter()
+            .filter_map(|entry| {
                 name_to_hash_mapping
                     .inner
                     .get(&entry.name)
@@ -96,9 +105,10 @@ async fn main() {
                             details.version.resource.clone(),
                         )
                     })
-            }))
-            .await,
-        );
+            })
+            .pipe(join_parallel)
+            .await
+            .pipe(log_errors);
     }
 
     if CONFIG.update_cache {
