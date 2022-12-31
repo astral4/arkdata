@@ -23,6 +23,7 @@ pub async fn download_asset(name: String, client: Client, version: String) -> Re
         name.replace(".ab", "")
             .replace(".mp4", "")
             .replace('/', "_")
+            .replace('#', "__")
     );
     let response = client
         .get(url)
