@@ -1,4 +1,4 @@
-use crate::{extract, Cache, CONFIG};
+use crate::{extract::extract, Cache, Fetch, CONFIG};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
@@ -61,19 +61,4 @@ pub struct UpdateInfo {
     pub pack_infos: Vec<PackData>,
 }
 
-impl UpdateInfo {
-    /// # Errors
-    /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn fetch_latest(client: &Client, url: String) -> Result<Self> {
-        let response = client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
-        let update_info: Self =
-            serde_json::from_str(response.as_str()).expect("Failed to read response as UpdateInfo");
-        Ok(update_info)
-    }
-}
+impl Fetch for UpdateInfo {}

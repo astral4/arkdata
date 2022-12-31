@@ -2,7 +2,9 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use arkdata::{download_asset, Cache, Details, NameHashMapping, UpdateInfo, Version, CONFIG};
+use arkdata::{
+    download_asset, Cache, Details, Fetch, NameHashMapping, UpdateInfo, Version, CONFIG,
+};
 use futures::Future;
 use reqwest::Client;
 use std::{fs, path::Path};
@@ -26,7 +28,7 @@ async fn main() {
     let mut name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
     let client = Client::new();
 
-    let data_version = Version::fetch_latest(&client, CONFIG.server_url.version.as_str())
+    let data_version = Version::fetch(&client, CONFIG.server_url.version.as_str())
         .await
         .expect("Failed to fetch version data");
     if !CONFIG.force_fetch && details.version == data_version {
@@ -34,15 +36,18 @@ async fn main() {
     }
     details.version = data_version;
 
-    let asset_info = UpdateInfo::fetch_latest(
-        &client,
-        format!(
-            "{}/assets/{}/hot_update_list.json",
-            CONFIG.server_url.base, details.version.resource
-        ),
-    )
-    .await
-    .expect("Failed to fetch asset info list");
+    let asset_info = {
+        UpdateInfo::fetch(
+            &client,
+            format!(
+                "{}/assets/{}/hot_update_list.json",
+                CONFIG.server_url.base, details.version.resource
+            )
+            .as_str(),
+        )
+        .await
+        .expect("Failed to fetch asset info list")
+    };
 
     let target_path = Path::new(&CONFIG.output_dir);
 
