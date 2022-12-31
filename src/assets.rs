@@ -1,4 +1,4 @@
-use crate::{extract::extract, Cache, Fetch, CONFIG};
+use crate::{extract::extract, settings::CONFIG, Cache, Fetch};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;

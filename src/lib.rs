@@ -51,9 +51,9 @@ pub trait Fetch {
             .text()
             .await?;
 
-        let update_info: Self = serde_json::from_str(response.as_str())
+        let data: Self = serde_json::from_str(response.as_str())
             .unwrap_or_else(|_| panic!("Failed to read response as {}", type_name::<Self>()));
 
-        Ok(update_info)
+        Ok(data)
     }
 }

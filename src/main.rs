@@ -32,24 +32,24 @@ async fn join_parallel<T: Send + 'static>(
 
 #[tokio::main]
 async fn main() {
-    let mut details = Details::get(&CONFIG.details_path);
-    let mut name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
+    let details = Details::get(&CONFIG.details_path);
+    let name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
     let client = Client::new();
 
     let data_version = Version::fetch(&client, CONFIG.server_url.version.as_str())
         .await
         .expect("Failed to fetch version data");
+
     if !CONFIG.force_fetch && details.version == data_version {
         return;
     }
-    details.version = data_version;
 
     let asset_info = {
         UpdateInfo::fetch(
             &client,
             format!(
                 "{}/assets/{}/hot_update_list.json",
-                CONFIG.server_url.base, details.version.resource
+                CONFIG.server_url.base, data_version.resource
             )
             .as_str(),
         )
@@ -67,7 +67,7 @@ async fn main() {
         asset_info
             .pack_infos
             .into_iter()
-            .map(|pack| download_asset(pack.name, client.clone(), details.version.resource.clone()))
+            .map(|pack| download_asset(pack.name, client.clone(), data_version.resource.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -81,7 +81,7 @@ async fn main() {
                     download_asset(
                         entry.name.clone(),
                         client.clone(),
-                        details.version.resource.clone(),
+                        data_version.resource.clone(),
                     )
                 })
             })
@@ -102,7 +102,7 @@ async fn main() {
                         download_asset(
                             entry.name.clone(),
                             client.clone(),
-                            details.version.resource.clone(),
+                            data_version.resource.clone(),
                         )
                     })
             })
@@ -112,7 +112,11 @@ async fn main() {
     }
 
     if CONFIG.update_cache {
+        let mut details = details;
+        details.version = data_version;
         details.save(&CONFIG.details_path);
+
+        let mut name_to_hash_mapping = name_to_hash_mapping;
 
         name_to_hash_mapping
             .inner
