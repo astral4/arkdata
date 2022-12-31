@@ -19,7 +19,7 @@ impl Cache for NameHashMapping {}
 pub async fn download_asset(name: String, client: Client, version: String) -> Result<()> {
     let url = format!(
         "{}/assets/{version}/{}.dat",
-        CONFIG.base_server_url,
+        CONFIG.server_url.base,
         name.replace(".ab", "")
             .replace(".mp4", "")
             .replace('/', "_")

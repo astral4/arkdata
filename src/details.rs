@@ -20,7 +20,7 @@ pub struct Details {
 impl Version {
     /// # Errors
     /// Returns Err if the HTTP response fetching fails in some way.
-    pub async fn fetch_latest(client: &Client, url: String) -> Result<Self> {
+    pub async fn fetch_latest(client: &Client, url: &str) -> Result<Self> {
         let response = client
             .get(url)
             .send()
@@ -52,7 +52,7 @@ mod tests {
     #[tokio::test]
     async fn get_version() {
         let client = Client::new();
-        Version::fetch_latest(&client, format!("{}/version", CONFIG.base_server_url))
+        Version::fetch_latest(&client, &CONFIG.server_url.version)
             .await
             .unwrap();
     }
@@ -60,7 +60,7 @@ mod tests {
     #[tokio::test]
     async fn reject_invalid_url() {
         let client = Client::new();
-        let version = Version::fetch_latest(&client, String::default()).await;
+        let version = Version::fetch_latest(&client, "").await;
         assert!(version.is_err());
     }
 

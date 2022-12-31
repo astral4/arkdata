@@ -26,10 +26,9 @@ async fn main() {
     let mut name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
     let client = Client::new();
 
-    let data_version =
-        Version::fetch_latest(&client, format!("{}/version", CONFIG.base_server_url))
-            .await
-            .expect("Failed to fetch version data");
+    let data_version = Version::fetch_latest(&client, CONFIG.server_url.version.as_str())
+        .await
+        .expect("Failed to fetch version data");
     if !CONFIG.force_fetch && details.version == data_version {
         return;
     }
@@ -39,7 +38,7 @@ async fn main() {
         &client,
         format!(
             "{}/assets/{}/hot_update_list.json",
-            CONFIG.base_server_url, details.version.resource
+            CONFIG.server_url.base, details.version.resource
         ),
     )
     .await

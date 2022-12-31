@@ -7,11 +7,17 @@ enum Server {
     CN,
 }
 
+#[derive(Default)]
+pub struct ServerLink {
+    pub version: String,
+    pub base: String,
+}
+
 #[derive(Deserialize)]
 pub struct Settings {
     server: Server,
     #[serde(skip)]
-    pub base_server_url: String,
+    pub server_url: ServerLink,
     pub details_path: String,
     pub hashes_path: String,
     pub force_fetch: bool,
@@ -36,10 +42,22 @@ impl Settings {
             .try_deserialize::<SettingsWrapper>()
             .expect("Failed to deserialize configuration file")
             .fetch_settings;
-        settings.base_server_url = String::from(match settings.server {
-            Server::US => "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
-            Server::CN => todo!(),
-        });
+        settings.server_url = match settings.server {
+            Server::US => ServerLink {
+                version: String::from(
+                    "https://ark-us-static-online.yo-star.com/assetbundle/official/Android/version",
+                ),
+                base: String::from(
+                    "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
+                ),
+            },
+            Server::CN => ServerLink {
+                version: String::from(
+                    "https://ak-conf.hypergryph.com/config/prod/official/Android/version",
+                ),
+                base: String::from("https://ak.hycdn.cn/assetbundle/official/Android"),
+            },
+        };
         settings
     }
 }
