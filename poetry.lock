@@ -166,7 +166,7 @@ texture2ddecoder = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "8a4aba080557bc7a31c46e2d84e5176ef1ef05e5971dcf1a8873cbf702e3d185"
+content-hash = "eed957e164419ddc384cc570b9907e760fe65b5d1ff309176966a193579ab0de"
 
 [metadata.files]
 brotli = [
