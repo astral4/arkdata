@@ -5,4 +5,9 @@ if __name__ == "__main__":
     with open("config.toml", mode="rb") as f:
         config = tomllib.load(f)["unpack-settings"]
 
-    kawapack.convert(config["input_dir"], config["output_dir"], config.get("match_patterns"))
+    kawapack.convert(
+        config["input_dir"],
+        config["output_dir"],
+        config.get("match_patterns"),
+        show_logs=False
+    )

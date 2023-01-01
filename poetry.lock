@@ -40,7 +40,7 @@ python-versions = "*"
 
 [[package]]
 name = "kawapack"
-version = "0.6.1"
+version = "0.6.2"
 description = "Utility for extracting Arknights assets"
 category = "main"
 optional = false
@@ -283,8 +283,8 @@ etcpak = [
     {file = "etcpak-0.9.8.tar.gz", hash = "sha256:c6b52c9da0fbeae02626b483bda16d2ec9622a85839fbfdc1ad666ce02f5fe2a"},
 ]
 kawapack = [
-    {file = "kawapack-0.6.1-py3-none-any.whl", hash = "sha256:ec0f930dece34dced391b3d123a3ffa2b752c09092c1d954b2a2c2a9dda76c17"},
-    {file = "kawapack-0.6.1.tar.gz", hash = "sha256:780ad4ec769cbb8bdfc08729ad66be771ca86b59f8d805e50c08515855b492a6"},
+    {file = "kawapack-0.6.2-py3-none-any.whl", hash = "sha256:ef754006888cb8c938fcd2961ad0ebb0afa51faf5866c6288bc7d1c9539b79e3"},
+    {file = "kawapack-0.6.2.tar.gz", hash = "sha256:623fd03d22438aeb6e600d7bbd7e2767b5377edfbc782fc372a15a888bc414b1"},
 ]
 lz4 = [
     {file = "lz4-4.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:3881573c3db902db370e072eb64b40c7c8289b94b2a731e051858cc198f890e8"},
