@@ -2,9 +2,7 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use arkdata::{
-    download_asset, Cache, Details, Fetch, NameHashMapping, UpdateInfo, Version, CONFIG,
-};
+use arkdata::{download_asset, Cache, Details, NameHashMapping, UpdateInfo, CONFIG, VERSION};
 use futures::{future::join_all, Future};
 use reqwest::Client;
 use std::fs;
@@ -36,11 +34,7 @@ async fn main() {
     let name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
     let client = Client::new();
 
-    let data_version = Version::fetch(&client, CONFIG.server_url.version.as_str())
-        .await
-        .expect("Failed to fetch version data");
-
-    if !CONFIG.force_fetch && details.version == data_version {
+    if !CONFIG.force_fetch && details.version == *VERSION {
         return;
     }
 
@@ -49,7 +43,7 @@ async fn main() {
             &client,
             format!(
                 "{}/assets/{}/hot_update_list.json",
-                CONFIG.server_url.base, data_version.resource
+                CONFIG.server_url.base, VERSION.resource
             )
             .as_str(),
         )
@@ -67,7 +61,7 @@ async fn main() {
         asset_info
             .pack_infos
             .into_iter()
-            .map(|pack| download_asset(pack.name, client.clone(), data_version.resource.clone()))
+            .map(|pack| download_asset(pack.name, client.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -77,13 +71,10 @@ async fn main() {
             .ab_infos
             .iter()
             .filter_map(|entry| {
-                entry.pack_id.is_none().then(|| {
-                    download_asset(
-                        entry.name.clone(),
-                        client.clone(),
-                        data_version.resource.clone(),
-                    )
-                })
+                entry
+                    .pack_id
+                    .is_none()
+                    .then(|| download_asset(entry.name.clone(), client.clone()))
             })
             .pipe(join_parallel)
             .await
@@ -98,13 +89,7 @@ async fn main() {
                     .inner
                     .get(&entry.name)
                     .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
-                    .then(|| {
-                        download_asset(
-                            entry.name.clone(),
-                            client.clone(),
-                            data_version.resource.clone(),
-                        )
-                    })
+                    .then(|| download_asset(entry.name.clone(), client.clone()))
             })
             .pipe(join_parallel)
             .await
@@ -113,7 +98,7 @@ async fn main() {
 
     if CONFIG.update_cache {
         let mut details = details;
-        details.version = data_version;
+        details.version = VERSION.clone();
         details.save(&CONFIG.details_path);
 
         let mut name_to_hash_mapping = name_to_hash_mapping;

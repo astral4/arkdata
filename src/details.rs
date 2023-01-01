@@ -1,15 +1,14 @@
-use crate::{Cache, Fetch};
+use crate::{Cache, CONFIG};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Version {
     #[serde(rename = "resVersion")]
     pub resource: String,
     #[serde(rename = "clientVersion")]
     client: String,
 }
-
-impl Fetch for Version {}
 
 #[derive(Serialize, Deserialize)]
 pub struct Details {
@@ -19,11 +18,20 @@ pub struct Details {
 
 impl Cache for Details {}
 
+pub static VERSION: Lazy<Version> = Lazy::new(|| {
+    let response = reqwest::blocking::get(&CONFIG.server_url.version)
+        .expect("Failed to send request")
+        .error_for_status()
+        .expect("Failed to get a successful response from server")
+        .text()
+        .expect("Failed to get the response body");
+    serde_json::from_str(&response).expect("Failed to deserialize response as Version")
+});
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Fetch, CONFIG};
-    use reqwest::Client;
+    use crate::VERSION;
     use serde_json::json;
     use std::{fs::File, panic::catch_unwind};
     use uuid::Uuid;
@@ -33,18 +41,9 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::let_underscore_drop)]
     async fn get_version() {
-        let client = Client::new();
-        Version::fetch(&client, CONFIG.server_url.version.as_str())
-            .await
-            .unwrap();
-    }
-
-    #[tokio::test]
-    async fn reject_invalid_url() {
-        let client = Client::new();
-        let version = Version::fetch(&client, "").await;
-        assert!(version.is_err());
+        let _ = VERSION;
     }
 
     #[test]

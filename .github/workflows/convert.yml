@@ -44,6 +44,8 @@ jobs:
         git config --global user.name "Kawabot"
         git config --global user.email "actions@users.noreply.github.com"
         git pull --all
-        git add results/assets/arts
+        git add results
+        git add details.json
+        git add hashes.json
         git commit -m "Update assets"
         git push
