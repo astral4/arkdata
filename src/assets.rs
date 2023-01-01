@@ -1,4 +1,4 @@
-use crate::{extract::extract, settings::CONFIG, Cache, Fetch};
+use crate::{extract::extract, Cache, CONFIG, VERSION};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
@@ -16,10 +16,11 @@ impl Cache for NameHashMapping {}
 
 /// # Errors
 /// Returns Err if the HTTP response fetching fails in some way.
-pub async fn download_asset(name: String, client: Client, version: String) -> Result<()> {
+pub async fn download_asset(name: String, client: Client) -> Result<()> {
     let url = format!(
-        "{}/assets/{version}/{}.dat",
+        "{}/assets/{}/{}.dat",
         CONFIG.server_url.base,
+        VERSION.resource,
         name.replace(".ab", "")
             .replace(".mp4", "")
             .replace('/', "_")
@@ -62,4 +63,18 @@ pub struct UpdateInfo {
     pub pack_infos: Vec<PackData>,
 }
 
-impl Fetch for UpdateInfo {}
+impl UpdateInfo {
+    /// # Errors
+    /// Returns Err if the HTTP response fails in some way, or the response cannot be deserialized as `UpdateInfo`.
+    pub async fn fetch(client: &Client, url: &str) -> Result<Self> {
+        let response = client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
+
+        Ok(serde_json::from_str(&response)?)
+    }
+}
