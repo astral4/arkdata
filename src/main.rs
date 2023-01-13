@@ -33,7 +33,6 @@ async fn main() {
     let details = Details::get(&CONFIG.details_path);
     let name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
     let client = Client::builder()
-        .http1_only()
         .https_only(true)
         .use_rustls_tls()
         .build()
