@@ -32,7 +32,12 @@ async fn join_parallel<T: Send + 'static>(
 async fn main() {
     let details = Details::get(&CONFIG.details_path);
     let name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
-    let client = Client::new();
+    let client = Client::builder()
+        .http1_only()
+        .https_only(true)
+        .use_rustls_tls()
+        .build()
+        .expect("Failed to build reqwest Client");
 
     if !CONFIG.force_fetch && details.version == *VERSION {
         return;

@@ -67,14 +67,12 @@ impl UpdateInfo {
     /// # Errors
     /// Returns Err if the HTTP response fails in some way, or the response cannot be deserialized as `UpdateInfo`.
     pub async fn fetch(client: &Client, url: &str) -> Result<Self> {
-        let response = client
+        Ok(client
             .get(url)
             .send()
             .await?
             .error_for_status()?
-            .text()
-            .await?;
-
-        Ok(serde_json::from_str(&response)?)
+            .json()
+            .await?)
     }
 }

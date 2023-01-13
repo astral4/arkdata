@@ -4,7 +4,7 @@ details_path = "details.json"
 hashes_path = "hashes.json"
 force_fetch = true
 output_dir = "assets"
-update_cache = true
+update_cache = false
 
 [unpack-settings]
 input_dir = "assets"

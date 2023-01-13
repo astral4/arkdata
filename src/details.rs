@@ -1,6 +1,8 @@
 use crate::{Cache, CONFIG};
 use once_cell::sync::Lazy;
+use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Version {
@@ -19,13 +21,21 @@ pub struct Details {
 impl Cache for Details {}
 
 pub static VERSION: Lazy<Version> = Lazy::new(|| {
-    let response = reqwest::blocking::get(&CONFIG.server_url.version)
+    let client = Client::builder()
+        .https_only(true)
+        .timeout(Duration::from_secs(10))
+        .use_rustls_tls()
+        .build()
+        .expect("Failed to build reqwest Client");
+
+    client
+        .get(&CONFIG.server_url.version)
+        .send()
         .expect("Failed to send request")
         .error_for_status()
         .expect("Failed to get a successful response from server")
-        .text()
-        .expect("Failed to get the response body");
-    serde_json::from_str(&response).expect("Failed to deserialize response as Version")
+        .json()
+        .expect("Failed to get the response body")
 });
 
 #[cfg(test)]
