@@ -2,11 +2,10 @@
 server = "US"
 details_path = "details.json"
 hashes_path = "hashes.json"
-force_fetch = true
+force_fetch = false
 output_dir = "assets"
-update_cache = false
+update_cache = true
 
 [unpack-settings]
 input_dir = "assets"
 output_dir = "results"
-match_patterns = ["torappu/dynamicassets/arts/skills"]
