@@ -9,3 +9,4 @@ update_cache = true
 [unpack-settings]
 input_dir = "assets"
 output_dir = "results"
+match_patterns = ["arts/charportraits"]
