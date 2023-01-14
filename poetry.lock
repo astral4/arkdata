@@ -40,7 +40,7 @@ python-versions = "*"
 
 [[package]]
 name = "kawapack"
-version = "0.6.5"
+version = "0.8.1"
 description = "Utility for extracting Arknights assets"
 category = "main"
 optional = false
@@ -165,7 +165,7 @@ texture2ddecoder = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "eed957e164419ddc384cc570b9907e760fe65b5d1ff309176966a193579ab0de"
+content-hash = "cc179928d6dcf067b87d300a0367976f377ece86176a902910893c66510144d6"
 
 [metadata.files]
 brotli = [
@@ -282,8 +282,8 @@ etcpak = [
     {file = "etcpak-0.9.8.tar.gz", hash = "sha256:c6b52c9da0fbeae02626b483bda16d2ec9622a85839fbfdc1ad666ce02f5fe2a"},
 ]
 kawapack = [
-    {file = "kawapack-0.6.5-py3-none-any.whl", hash = "sha256:b6a91e9a0f60e63a3f4bba5ad7c7297cc2346a489168cbc3115d9836660dc5b8"},
-    {file = "kawapack-0.6.5.tar.gz", hash = "sha256:fec2fc4ed95800f1933bf7727d0db96bc744b0c5321f73af331bbff97a3c5b29"},
+    {file = "kawapack-0.8.1-py3-none-any.whl", hash = "sha256:afcb87d80fa8667fa7489d2b27c92a1293ca16cc869d5a844bcf0389553e9fb2"},
+    {file = "kawapack-0.8.1.tar.gz", hash = "sha256:c9e5c752b13bc04dc9c9adc0a7ce3ecda65c481adb105440b766bddbb3301f71"},
 ]
 lz4 = [
     {file = "lz4-4.3.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:1c4c100d99eed7c08d4e8852dd11e7d1ec47a3340f49e3a96f8dfbba17ffb300"},
