@@ -36,7 +36,7 @@ pub async fn download_asset(name: String, client: Client) -> Result<()> {
         .await?;
 
     spawn_blocking(move || {
-        extract(Cursor::new(response), &CONFIG.output_path, false)
+        extract(Cursor::new(response), &CONFIG.output_path)
             .map_or_else(|err| println!("{err}"), |_| println!("[SUCCESS] {name}"));
     });
 
