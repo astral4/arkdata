@@ -54,7 +54,6 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
         command_timeout: "60m"
         key: ${{ secrets.SSH_KEY }}
         source: "results"
