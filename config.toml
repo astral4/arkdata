@@ -1,5 +1,5 @@
 [fetch-settings]
-server = "US"
+server = "CN"
 details_path = "details.json"
 hashes_path = "hashes.json"
 force_fetch = false
@@ -9,4 +9,3 @@ update_cache = true
 [unpack-settings]
 input_dir = "assets"
 output_dir = "results"
-match_patterns = ["arts/charportraits"]
