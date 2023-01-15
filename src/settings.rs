@@ -34,9 +34,7 @@ pub struct Settings {
     pub details_path: String,
     pub hashes_path: String,
     pub force_fetch: bool,
-    output_dir: String,
-    #[serde(skip)]
-    pub output_path: PathBuf,
+    pub output_dir: PathBuf,
     pub update_cache: bool,
 }
 
@@ -85,8 +83,6 @@ pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
     } else {
         panic!("No server was provided")
     }
-
-    settings.output_path = PathBuf::from(&settings.output_dir);
 
     settings
 });

@@ -55,8 +55,8 @@ async fn main() {
         .expect("Failed to fetch asset info list")
     };
 
-    if !CONFIG.output_path.is_dir() {
-        fs::create_dir(&CONFIG.output_path).expect("Failed to create output directory");
+    if !CONFIG.output_dir.is_dir() {
+        fs::create_dir(&CONFIG.output_dir).expect("Failed to create output directory");
     }
 
     if name_to_hash_mapping.inner.is_empty() {
@@ -111,7 +111,7 @@ async fn main() {
             .inner
             .extend(asset_info.ab_infos.into_iter().filter_map(|entry| {
                 CONFIG
-                    .output_path
+                    .output_dir
                     .join(&entry.name)
                     .is_file()
                     .then_some((entry.name, entry.md5))
