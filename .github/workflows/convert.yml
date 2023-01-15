@@ -59,3 +59,4 @@ jobs:
         source: "results"
         target: "gamedata"
         overwrite: true
+        strip_components: 1
