@@ -3,7 +3,7 @@ name: Extract assets
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0,2,4,6,8,10,12,14,16,18,20,22 * * *"
+    - cron: "0 0,4,8,12,16,20 * * *"
 
 jobs:
   main:
@@ -47,6 +47,9 @@ jobs:
       run: |
         poetry env use 3.11
         poetry install
+
+    - name: Install necessary DLLs
+      run: sudo apt-get -y install libogg libvorbis
 
     - name: Unpack assets
       run: poetry run python main.py
