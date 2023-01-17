@@ -49,7 +49,7 @@ jobs:
         poetry install
 
     - name: Install necessary DLLs
-      run: sudo apt-get -y install libogg libvorbis
+      run: sudo apt-get -y install libogg0 libvorbis0a libvorbisenc2 libvorbisfile3
 
     - name: Unpack assets
       run: poetry run python main.py
