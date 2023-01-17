@@ -1,5 +1,5 @@
 [fetch-settings]
-server = "US"
+server = "CN"
 details_path = "details.json"
 hashes_path = "hashes.json"
 force_fetch = false
