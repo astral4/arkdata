@@ -13,5 +13,6 @@ if __name__ == "__main__":
         input_dir,
         config["output_dir"],
         config.get("match_patterns"),
+        clean_up=True,
         portrait_dir=portrait_dir
     )
