@@ -1,23 +1,12 @@
 use config::{Config, File, FileFormat};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
-use std::{path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 
 #[derive(Deserialize)]
 enum Server {
     US,
     CN,
-}
-
-impl FromStr for Server {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "US" => Ok(Self::US),
-            "CN" => Ok(Self::CN),
-            _ => Err(()),
-        }
-    }
 }
 
 #[derive(Default)]
