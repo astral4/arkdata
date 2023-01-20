@@ -60,7 +60,7 @@ pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
     if let Some(server) = env::args().nth(1) {
         settings.server = Some(
             Server::from_str(&server).expect("Failed to parse server from environment variable"),
-        )
+        );
     }
 
     if let Some(server) = &settings.server {
