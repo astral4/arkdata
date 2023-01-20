@@ -3,8 +3,8 @@
 
 mod assets;
 mod details;
-mod extract;
 mod settings;
+mod unzip;
 pub use assets::{download_asset, NameHashMapping, UpdateInfo};
 pub use details::*;
 pub use settings::CONFIG;

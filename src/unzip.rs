@@ -13,7 +13,7 @@ use zip::read::ZipFile;
 
 /// # Errors
 /// Returns Err if filesystem manipuation, I/O, or unzipping fails.
-pub fn extract<S: Read + Seek>(source: S, target_dir: &Path) -> Result<()> {
+pub fn unzip<S: Read + Seek>(source: S, target_dir: &Path) -> Result<()> {
     if !target_dir.exists() {
         fs::create_dir_all(target_dir)?;
     }

@@ -1,4 +1,4 @@
-use crate::{extract::extract, Cache, CONFIG, VERSION};
+use crate::{unzip::unzip, Cache, CONFIG, VERSION};
 use ahash::HashMap;
 use anyhow::Result;
 use reqwest::Client;
@@ -36,7 +36,7 @@ pub async fn download_asset(name: String, client: Client) -> Result<()> {
         .await?;
 
     spawn_blocking(move || {
-        extract(Cursor::new(response), &CONFIG.output_dir)
+        unzip(Cursor::new(response), &CONFIG.output_dir)
             .map_or_else(|err| println!("{err}"), |_| println!("[SUCCESS] {name}"));
     });
 
