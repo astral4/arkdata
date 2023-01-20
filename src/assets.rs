@@ -1,9 +1,11 @@
 use crate::{unzip::unzip, Cache, CONFIG, VERSION};
+use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
-use reqwest::Client;
+use once_cell::sync::Lazy;
+use reqwest::{Client, Error};
 use serde::{Deserialize, Serialize};
-use std::io::Cursor;
+use std::{io::Cursor, time::Duration};
 use tokio::task::spawn_blocking;
 
 #[derive(Serialize, Deserialize)]
@@ -13,6 +15,12 @@ pub struct NameHashMapping {
 }
 
 impl Cache for NameHashMapping {}
+
+static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
+    RetryPolicy::exponential(Duration::from_secs(1))
+        .with_max_retries(5)
+        .with_jitter(true)
+});
 
 /// # Errors
 /// Returns Err if the HTTP response fetching fails in some way.
@@ -27,11 +35,12 @@ pub async fn download_asset(name: String, client: Client) -> Result<()> {
             .replace('#', "__")
     );
 
-    let response = client
-        .get(url)
-        .send()
+    let response = RETRY_POLICY
+        .retry_if(
+            || async { client.get(&url).send().await?.error_for_status() },
+            Error::is_timeout,
+        )
         .await?
-        .error_for_status()?
         .bytes()
         .await?;
 

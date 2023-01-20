@@ -10,6 +10,7 @@ publish = false
 path = "src/lib.rs"
 
 [dependencies]
+again = { version = "0.1.2", default-features = false, features = ["rand"] }
 ahash = { version = "0.8.2", features = ["serde"] }
 anyhow = "1.0.68"
 config = { version = "0.13.3", default-features = false, features = ["toml"] }
