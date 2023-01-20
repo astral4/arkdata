@@ -1,7 +1,7 @@
 use config::{Config, File, FileFormat};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
-use std::{env, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 #[derive(Deserialize)]
 enum Server {
@@ -28,7 +28,7 @@ pub struct ServerLink {
 
 #[derive(Deserialize)]
 pub struct Settings {
-    server: Option<Server>,
+    server: Server,
     #[serde(skip)]
     pub server_url: ServerLink,
     pub details_path: String,
@@ -55,34 +55,22 @@ pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
         .expect("Failed to deserialize configuration file")
         .fetch_settings;
 
-    // If a server is supplied as an environmental variable,
-    // it takes precedence over the server specified in config.toml
-    if let Some(server) = env::args().nth(1) {
-        settings.server = Some(
-            Server::from_str(&server).expect("Failed to parse server from environment variable"),
-        );
-    }
-
-    if let Some(server) = &settings.server {
-        settings.server_url = match server {
-            Server::US => ServerLink {
-                version: String::from(
-                    "https://ark-us-static-online.yo-star.com/assetbundle/official/Android/version",
-                ),
-                base: String::from(
-                    "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
-                ),
-            },
-            Server::CN => ServerLink {
-                version: String::from(
-                    "https://ak-conf.hypergryph.com/config/prod/official/Android/version",
-                ),
-                base: String::from("https://ak.hycdn.cn/assetbundle/official/Android"),
-            },
-        }
-    } else {
-        panic!("No server was provided")
-    }
+    settings.server_url = match settings.server {
+        Server::US => ServerLink {
+            version: String::from(
+                "https://ark-us-static-online.yo-star.com/assetbundle/official/Android/version",
+            ),
+            base: String::from(
+                "https://ark-us-static-online.yo-star.com/assetbundle/official/Android",
+            ),
+        },
+        Server::CN => ServerLink {
+            version: String::from(
+                "https://ak-conf.hypergryph.com/config/prod/official/Android/version",
+            ),
+            base: String::from("https://ak.hycdn.cn/assetbundle/official/Android"),
+        },
+    };
 
     settings
 });
