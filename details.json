@@ -1,4 +1,12 @@
 {
-  "resVersion": "",
-  "clientVersion": ""
+  "version": {
+    "US": {
+      "resVersion": "",
+      "clientVersion": ""
+    },
+    "CN": {
+      "resVersion": "",
+      "clientVersion": ""
+    }
+  }
 }

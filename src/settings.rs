@@ -1,10 +1,10 @@
 use config::{Config, File, FileFormat};
 use once_cell::sync::Lazy;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Deserialize)]
-enum Server {
+#[derive(Deserialize, Serialize, Hash, PartialEq, Eq, Clone, Copy)]
+pub enum Server {
     US,
     CN,
 }
@@ -17,7 +17,7 @@ pub struct ServerLink {
 
 #[derive(Deserialize)]
 pub struct Settings {
-    server: Server,
+    pub server: Server,
     #[serde(skip)]
     pub server_url: ServerLink,
     pub details_path: String,

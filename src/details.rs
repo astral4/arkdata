@@ -1,4 +1,5 @@
-use crate::{Cache, CONFIG};
+use crate::{settings::Server, Cache, CONFIG};
+use ahash::HashMap;
 use once_cell::sync::Lazy;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
@@ -14,11 +15,23 @@ pub struct Version {
 
 #[derive(Serialize, Deserialize)]
 pub struct Details {
-    #[serde(flatten)]
-    pub version: Version,
+    version: HashMap<Server, Version>,
 }
 
 impl Cache for Details {}
+
+impl Details {
+    #[must_use]
+    pub fn get_version(&self) -> &Version {
+        self.version
+            .get(&CONFIG.server)
+            .expect("Failed to get version data for server")
+    }
+
+    pub fn set_version(&mut self, version: Version) {
+        self.version.insert(CONFIG.server, version);
+    }
+}
 
 pub static VERSION: Lazy<Version> = Lazy::new(|| {
     let client = Client::builder()

@@ -38,7 +38,7 @@ async fn main() {
         .build()
         .expect("Failed to build reqwest Client");
 
-    if !CONFIG.force_fetch && details.version == *VERSION {
+    if !CONFIG.force_fetch && *details.get_version() == *VERSION {
         return;
     }
 
@@ -102,7 +102,7 @@ async fn main() {
 
     if CONFIG.update_cache {
         let mut details = details;
-        details.version = VERSION.clone();
+        details.set_version(VERSION.clone());
         details.save(&CONFIG.details_path);
 
         let mut name_to_hash_mapping = name_to_hash_mapping;
