@@ -6,9 +6,6 @@ edition = "2021"
 license = "AGPL-3.0-or-later"
 publish = false
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
 again = { version = "0.1.2", default-features = false, features = ["rand"] }
 ahash = { version = "0.8.2", features = ["serde"] }
