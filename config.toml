@@ -1,6 +1,6 @@
 [fetch-settings]
 server = "CN"
-details_path = "details.json"
+details_path = "versions.json"
 hashes_path = "hashes.json"
 force_fetch = false
 output_dir = "assets"

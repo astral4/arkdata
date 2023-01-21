@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use arkdata::{download_asset, Cache, Details, NameHashMapping, UpdateInfo, CONFIG, VERSION};
+use arkdata::{download_asset, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION};
 use futures::{future::join_all, Future};
 use reqwest::Client;
 use std::fs;
@@ -30,15 +30,15 @@ async fn join_parallel<T: Send + 'static>(
 
 #[tokio::main]
 async fn main() {
-    let details = Details::get(&CONFIG.details_path);
-    let name_to_hash_mapping = NameHashMapping::get(&CONFIG.hashes_path);
+    let details = Version::load(&CONFIG.details_path);
+    let name_to_hash_mapping = NameHashMapping::load(&CONFIG.hashes_path);
     let client = Client::builder()
         .https_only(true)
         .use_rustls_tls()
         .build()
         .expect("Failed to build reqwest Client");
 
-    if !CONFIG.force_fetch && *details.get_version() == *VERSION {
+    if !CONFIG.force_fetch && *details.get() == *VERSION {
         return;
     }
 
@@ -102,7 +102,7 @@ async fn main() {
 
     if CONFIG.update_cache {
         let mut details = details;
-        details.set_version(VERSION.clone());
+        details.set(VERSION.clone());
         details.save(&CONFIG.details_path);
 
         let mut name_to_hash_mapping = name_to_hash_mapping;

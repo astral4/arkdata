@@ -14,7 +14,7 @@ use std::{fs::File, io::BufReader, marker::Sized};
 
 pub trait Cache {
     #[must_use]
-    fn get(path: &str) -> Self
+    fn load(path: &str) -> Self
     where
         for<'de> Self: Sized + Deserialize<'de>,
     {

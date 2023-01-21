@@ -6,34 +6,35 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
-pub struct Version {
-    #[serde(rename = "resVersion")]
+pub struct VersionInner {
+    #[serde(alias = "resVersion")]
     pub resource: String,
-    #[serde(rename = "clientVersion")]
+    #[serde(alias = "clientVersion")]
     client: String,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Details {
-    version: HashMap<Server, Version>,
+pub struct Version {
+    #[serde(flatten)]
+    version: HashMap<Server, VersionInner>,
 }
 
-impl Cache for Details {}
+impl Cache for Version {}
 
-impl Details {
+impl Version {
     #[must_use]
-    pub fn get_version(&self) -> &Version {
+    pub fn get(&self) -> &VersionInner {
         self.version
             .get(&CONFIG.server)
             .expect("Failed to get version data for server")
     }
 
-    pub fn set_version(&mut self, version: Version) {
+    pub fn set(&mut self, version: VersionInner) {
         self.version.insert(CONFIG.server, version);
     }
 }
 
-pub static VERSION: Lazy<Version> = Lazy::new(|| {
+pub static VERSION: Lazy<VersionInner> = Lazy::new(|| {
     let client = Client::builder()
         .https_only(true)
         .timeout(Duration::from_secs(10))
@@ -73,7 +74,7 @@ mod tests {
     #[should_panic]
     #[allow(unused_must_use)]
     fn panic_on_nonexistent_file() {
-        Details::get(generate_path().as_str());
+        Version::load(generate_path().as_str());
     }
 
     #[test]
@@ -84,7 +85,7 @@ mod tests {
         let res = catch_unwind(|| {
             if let Ok(file) = File::create(&path) {
                 if serde_json::to_writer(file, &json!("{}")).is_ok() {
-                    Details::get(path.as_str());
+                    Version::load(path.as_str());
                 }
             }
         });
