@@ -25,6 +25,16 @@ pub struct NameHashMapping {
 
 impl Cache for NameHashMapping {}
 
+impl NameHashMapping {
+    pub fn update(&mut self, data: &UpdateInfo) {
+        self.inner = data
+            .ab_infos
+            .iter()
+            .map(|asset| (asset.name.clone(), asset.md5.clone()))
+            .collect();
+    }
+}
+
 static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
     RetryPolicy::exponential(Duration::from_secs(3))
         .with_max_retries(5)
