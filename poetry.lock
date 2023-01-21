@@ -167,14 +167,14 @@ files = [
 
 [[package]]
 name = "kawapack"
-version = "0.11.0"
+version = "0.13.0"
 description = "Utility for extracting Arknights assets"
 category = "main"
 optional = false
 python-versions = ">=3.11,<4.0"
 files = [
-    {file = "kawapack-0.11.0-py3-none-any.whl", hash = "sha256:8ce3be0522aaea3324daf5154c3b026e03eabc4e64986bd9aff7c49d1d298e8d"},
-    {file = "kawapack-0.11.0.tar.gz", hash = "sha256:cd569b283c4fb0fbb9fcfdc64d31ef4774a54f5642bc07f4cf11f181719a7aa1"},
+    {file = "kawapack-0.13.0-py3-none-any.whl", hash = "sha256:4233c3a97069d595435db7d8ebafe083aaf507133c23fdfc6d4b7bb5800bcfc0"},
+    {file = "kawapack-0.13.0.tar.gz", hash = "sha256:2662f121fba21c715583c27577660d96edad6c32e7253e4caa0872906677368d"},
 ]
 
 [package.dependencies]
@@ -593,4 +593,4 @@ texture2ddecoder = "*"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "456b2e09a8bb3ae698aaf048eed900b02c66b3fac35a307870140ee9da80aa0d"
+content-hash = "b5b6a586321c4489a495f7e9e25ab5dc7f5b1b21c5e1e25a7d9d1376b1db47d4"
