@@ -17,9 +17,10 @@ pub struct NameHashMapping {
 impl Cache for NameHashMapping {}
 
 static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
-    RetryPolicy::exponential(Duration::from_secs(1))
+    RetryPolicy::exponential(Duration::from_secs(3))
         .with_max_retries(5)
         .with_jitter(true)
+        .with_max_delay(Duration::from_secs(20))
 });
 
 /// # Errors
