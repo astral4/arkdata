@@ -1,11 +1,7 @@
 [fetch-settings]
-server = "CN"
+server = "US"
 details_path = "versions.json"
 hashes_path = "hashes.json"
 force_fetch = false
-output_dir = "assets"
-update_cache = true
-
-[unpack-settings]
-input_dir = "assets"
 output_dir = "results"
+update_cache = true

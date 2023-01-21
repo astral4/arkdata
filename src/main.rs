@@ -2,10 +2,15 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use arkdata::{download_asset, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION};
+use arkdata::{
+    download_asset, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION,
+};
+use crossbeam_channel::unbounded;
 use futures::{future::join_all, Future};
+use pyo3::{types::PyBytes, Python};
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use reqwest::Client;
-use std::fs;
+use std::{fs, thread};
 use tap::Pipe;
 
 fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
@@ -30,7 +35,7 @@ async fn join_parallel<T: Send + 'static>(
 
 #[tokio::main]
 async fn main() {
-    let details = Version::load(&CONFIG.details_path);
+    let version = Version::load(&CONFIG.details_path);
     let name_to_hash_mapping = NameHashMapping::load(&CONFIG.hashes_path);
     let client = Client::builder()
         .https_only(true)
@@ -38,7 +43,7 @@ async fn main() {
         .build()
         .expect("Failed to build reqwest Client");
 
-    if !CONFIG.force_fetch && *details.get() == *VERSION {
+    if !CONFIG.force_fetch && *version.get() == *VERSION {
         return;
     }
 
@@ -56,8 +61,27 @@ async fn main() {
     };
 
     if !CONFIG.output_dir.is_dir() {
-        fs::create_dir(&CONFIG.output_dir).expect("Failed to create output directory");
+        fs::create_dir_all(&CONFIG.output_dir).expect("Failed to create output directory");
     }
+
+    let (sender, receiver) = unbounded::<AssetBundle>();
+
+    let thread_handle = thread::spawn(|| {
+        receiver.into_iter().par_bridge().for_each(|bundle| {
+            Python::with_gil(|py| {
+                let extract = py.import("kawapack").unwrap().getattr("extract").unwrap();
+                let data = PyBytes::new_with(py, bundle.data.len(), |bytes| {
+                    bytes.copy_from_slice(bundle.data.as_ref());
+                    Ok(())
+                })
+                .unwrap();
+
+                extract
+                    .call1((data, bundle.path, &CONFIG.output_dir))
+                    .unwrap();
+            });
+        });
+    });
 
     if name_to_hash_mapping.inner.is_empty() {
         // No assets have been downloaded before
@@ -65,7 +89,7 @@ async fn main() {
         asset_info
             .pack_infos
             .into_iter()
-            .map(|pack| download_asset(pack.name, client.clone()))
+            .map(|pack| download_asset(pack.name, client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -78,7 +102,7 @@ async fn main() {
                 entry
                     .pack_id
                     .is_none()
-                    .then(|| download_asset(entry.name.clone(), client.clone()))
+                    .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
             })
             .pipe(join_parallel)
             .await
@@ -93,7 +117,7 @@ async fn main() {
                     .inner
                     .get(&entry.name)
                     .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
-                    .then(|| download_asset(entry.name.clone(), client.clone()))
+                    .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
             })
             .pipe(join_parallel)
             .await
@@ -101,9 +125,9 @@ async fn main() {
     }
 
     if CONFIG.update_cache {
-        let mut details = details;
-        details.set(VERSION.clone());
-        details.save(&CONFIG.details_path);
+        let mut version = version;
+        version.set(VERSION.clone());
+        version.save(&CONFIG.details_path);
 
         let mut name_to_hash_mapping = name_to_hash_mapping;
 
@@ -119,4 +143,6 @@ async fn main() {
 
         name_to_hash_mapping.save(&CONFIG.hashes_path);
     }
+
+    thread_handle.join().unwrap();
 }

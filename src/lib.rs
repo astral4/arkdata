@@ -4,8 +4,7 @@
 mod assets;
 mod details;
 mod settings;
-mod unzip;
-pub use assets::{download_asset, NameHashMapping, UpdateInfo};
+pub use assets::{download_asset, AssetBundle, NameHashMapping, UpdateInfo};
 pub use details::*;
 pub use settings::CONFIG;
 
