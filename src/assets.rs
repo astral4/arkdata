@@ -6,7 +6,7 @@ use bytes::Bytes;
 use flume::Sender;
 use futures::{future::join_all, Future};
 use once_cell::sync::Lazy;
-use reqwest::{Client, Error};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Cursor, Read},
@@ -113,10 +113,7 @@ async fn download_asset(name: String, client: Client, sender: Sender<AssetBundle
     );
 
     let response = RETRY_POLICY
-        .retry_if(
-            || async { client.get(&url).send().await?.error_for_status() },
-            Error::is_timeout,
-        )
+        .retry(|| async { client.get(&url).send().await?.error_for_status() })
         .await?
         .bytes()
         .await?;
