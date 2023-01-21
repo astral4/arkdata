@@ -3,7 +3,7 @@ use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
 use bytes::Bytes;
-use crossbeam_channel::Sender;
+use flume::Sender;
 use futures::{future::join_all, Future};
 use once_cell::sync::Lazy;
 use reqwest::{Client, Error};

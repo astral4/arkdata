@@ -4,7 +4,7 @@
 use arkdata::{
     fetch_all, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION,
 };
-use crossbeam_channel::unbounded;
+use flume::unbounded;
 use pyo3::{types::PyBytes, Python};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use reqwest::Client;
