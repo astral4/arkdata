@@ -160,7 +160,7 @@ async fn download_asset(name: String, client: Client, sender: Sender<AssetBundle
 pub async fn fetch_all(
     hashes: &NameHashMapping,
     asset_info: UpdateInfo,
-    client: Client,
+    client: &Client,
     sender: Sender<AssetBundle>,
 ) {
     if hashes.inner.is_empty() {

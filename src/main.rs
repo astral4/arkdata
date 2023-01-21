@@ -27,11 +27,10 @@ async fn main() {
     let asset_info = {
         UpdateInfo::fetch(
             &client,
-            format!(
+            &format!(
                 "{}/assets/{}/hot_update_list.json",
                 CONFIG.server_url.base, VERSION.resource
-            )
-            .as_str(),
+            ),
         )
         .await
         .expect("Failed to fetch asset info list")
@@ -69,7 +68,7 @@ async fn main() {
         });
     });
 
-    fetch_all(&name_to_hash_mapping, asset_info, client, sender).await;
+    fetch_all(&name_to_hash_mapping, asset_info, &client, sender).await;
 
     thread_handle.join().unwrap();
 }
