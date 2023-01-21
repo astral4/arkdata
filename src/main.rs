@@ -1,37 +1,14 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![forbid(unsafe_code)]
 
-use anyhow::Result;
 use arkdata::{
-    download_asset, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION,
+    fetch_all, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION,
 };
 use crossbeam_channel::unbounded;
-use futures::{future::join_all, Future};
 use pyo3::{types::PyBytes, Python};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use reqwest::Client;
 use std::{fs, thread};
-use tap::Pipe;
-
-fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
-    results
-        .into_iter()
-        .filter_map(Result::err)
-        .for_each(|err| println!("{err}"));
-}
-
-async fn join_parallel<T: Send + 'static>(
-    futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
-) -> Vec<T> {
-    let tasks: Vec<_> = futs.into_iter().map(tokio::spawn).collect();
-    // unwrap the Result because it is introduced by tokio::spawn()
-    // and isn't something our caller can handle
-    join_all(tasks)
-        .await
-        .into_iter()
-        .map(Result::unwrap)
-        .collect()
-}
 
 #[tokio::main]
 async fn main() {
@@ -83,63 +60,12 @@ async fn main() {
         });
     });
 
-    if name_to_hash_mapping.inner.is_empty() {
-        // No assets have been downloaded before
-        // Download asset packs
-        asset_info
-            .pack_infos
-            .into_iter()
-            .map(|pack| download_asset(pack.name, client.clone(), sender.clone()))
-            .pipe(join_parallel)
-            .await
-            .pipe(log_errors);
-
-        // Some assets do not have a pack ID, so they need to be fetched separately
-        asset_info
-            .ab_infos
-            .iter()
-            .filter_map(|entry| {
-                entry
-                    .pack_id
-                    .is_none()
-                    .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
-            })
-            .pipe(join_parallel)
-            .await
-            .pipe(log_errors);
-    } else {
-        // Update collection of existing assets
-        asset_info
-            .ab_infos
-            .iter()
-            .filter_map(|entry| {
-                name_to_hash_mapping
-                    .inner
-                    .get(&entry.name)
-                    .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
-                    .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
-            })
-            .pipe(join_parallel)
-            .await
-            .pipe(log_errors);
-    }
+    fetch_all(&name_to_hash_mapping, asset_info, client, sender).await;
 
     if CONFIG.update_cache {
         let mut version = version;
         version.set(VERSION.clone());
         version.save(&CONFIG.details_path);
-
-        let mut name_to_hash_mapping = name_to_hash_mapping;
-
-        name_to_hash_mapping
-            .inner
-            .extend(asset_info.ab_infos.into_iter().filter_map(|entry| {
-                CONFIG
-                    .output_dir
-                    .join(&entry.name)
-                    .is_file()
-                    .then_some((entry.name, entry.md5))
-            }));
 
         name_to_hash_mapping.save(&CONFIG.hashes_path);
     }
