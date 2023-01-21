@@ -1,12 +1,19 @@
-use crate::{unzip::unzip, Cache, CONFIG, VERSION};
+use crate::{Cache, CONFIG, VERSION};
 use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
+use bytes::Bytes;
+use crossbeam_channel::Sender;
 use once_cell::sync::Lazy;
 use reqwest::{Client, Error};
 use serde::{Deserialize, Serialize};
-use std::{io::Cursor, time::Duration};
+use std::{
+    io::{Cursor, Read},
+    path::PathBuf,
+    time::Duration,
+};
 use tokio::task::spawn_blocking;
+use zip::ZipArchive;
 
 #[derive(Serialize, Deserialize)]
 pub struct NameHashMapping {
@@ -23,9 +30,23 @@ static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
         .with_max_delay(Duration::from_secs(20))
 });
 
+pub struct AssetBundle {
+    pub path: PathBuf,
+    pub data: Bytes,
+}
+
 /// # Errors
 /// Returns Err if the HTTP response fetching fails in some way.
-pub async fn download_asset(name: String, client: Client) -> Result<()> {
+/// # Panics
+/// Panics in the following situations:
+/// - Asset data cannot be unzipped
+/// - Size of a file in the zip archive cannot be truncated to usize
+/// - Data cannot be sent across channel
+pub async fn download_asset(
+    name: String,
+    client: Client,
+    sender: Sender<AssetBundle>,
+) -> Result<()> {
     let url = format!(
         "{}/assets/{}/{}.dat",
         CONFIG.server_url.base,
@@ -46,8 +67,36 @@ pub async fn download_asset(name: String, client: Client) -> Result<()> {
         .await?;
 
     spawn_blocking(move || {
-        unzip(Cursor::new(response), &CONFIG.output_dir)
-            .map_or_else(|err| println!("{err}"), |_| println!("[SUCCESS] {name}"));
+        let mut archive = ZipArchive::new(Cursor::new(response))
+            .unwrap_or_else(|_| panic!("Failed to create zip archive from response at {name}"));
+
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i).unwrap_or_else(|_| {
+                panic!("Failed to read zip file at index {i} in archive at {name}")
+            });
+
+            let mut buffer = Vec::with_capacity(
+                file.size()
+                    .try_into()
+                    .expect("File size as u64 could not be truncated to usize"),
+            );
+
+            file.read_to_end(&mut buffer).unwrap();
+
+            sender
+                .send(AssetBundle {
+                    path: CONFIG
+                        .output_dir
+                        .join(file.mangled_name())
+                        .parent()
+                        .unwrap()
+                        .to_path_buf(),
+                    data: buffer.into(),
+                })
+                .unwrap_or_else(|_| {
+                    panic!("Failed to send data across channel while processing {name}")
+                });
+        }
     });
 
     Ok(())
