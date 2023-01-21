@@ -4,6 +4,7 @@ use ahash::HashMap;
 use anyhow::Result;
 use bytes::Bytes;
 use crossbeam_channel::Sender;
+use futures::{future::join_all, Future};
 use once_cell::sync::Lazy;
 use reqwest::{Client, Error};
 use serde::{Deserialize, Serialize};
@@ -12,13 +13,14 @@ use std::{
     path::PathBuf,
     time::Duration,
 };
+use tap::Pipe;
 use tokio::task::spawn_blocking;
 use zip::ZipArchive;
 
 #[derive(Serialize, Deserialize)]
 pub struct NameHashMapping {
     #[serde(flatten)]
-    pub inner: HashMap<String, String>,
+    inner: HashMap<String, String>,
 }
 
 impl Cache for NameHashMapping {}
@@ -35,18 +37,61 @@ pub struct AssetBundle {
     pub data: Bytes,
 }
 
-/// # Errors
-/// Returns Err if the HTTP response fetching fails in some way.
-/// # Panics
-/// Panics in the following situations:
-/// - Asset data cannot be unzipped
-/// - Size of a file in the zip archive cannot be truncated to usize
-/// - Data cannot be sent across channel
-pub async fn download_asset(
+#[derive(Deserialize)]
+struct AssetData {
     name: String,
-    client: Client,
-    sender: Sender<AssetBundle>,
-) -> Result<()> {
+    md5: String,
+    #[serde(rename = "pid")]
+    pack_id: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct PackData {
+    name: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateInfo {
+    ab_infos: Vec<AssetData>,
+    pack_infos: Vec<PackData>,
+}
+
+impl UpdateInfo {
+    /// # Errors
+    /// Returns Err if the HTTP response fails in some way, or the response cannot be deserialized as `UpdateInfo`.
+    pub async fn fetch(client: &Client, url: &str) -> Result<Self> {
+        Ok(client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+}
+
+fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
+    results
+        .into_iter()
+        .filter_map(Result::err)
+        .for_each(|err| println!("{err}"));
+}
+
+async fn join_parallel<T: Send + 'static>(
+    futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
+) -> Vec<T> {
+    let tasks: Vec<_> = futs.into_iter().map(tokio::spawn).collect();
+    // unwrap the Result because it is introduced by tokio::spawn()
+    // and isn't something our caller can handle
+    join_all(tasks)
+        .await
+        .into_iter()
+        .map(Result::unwrap)
+        .collect()
+}
+
+async fn download_asset(name: String, client: Client, sender: Sender<AssetBundle>) -> Result<()> {
     let url = format!(
         "{}/assets/{}/{}.dat",
         CONFIG.server_url.base,
@@ -102,36 +147,50 @@ pub async fn download_asset(
     Ok(())
 }
 
-#[derive(Deserialize)]
-pub struct AssetData {
-    pub name: String,
-    pub md5: String,
-    #[serde(rename = "pid")]
-    pub pack_id: Option<String>,
-}
+pub async fn fetch_all(
+    hashes: &NameHashMapping,
+    asset_info: UpdateInfo,
+    client: Client,
+    sender: Sender<AssetBundle>,
+) {
+    if hashes.inner.is_empty() {
+        // No assets have been downloaded before
+        // Download asset packs
+        asset_info
+            .pack_infos
+            .into_iter()
+            .map(|pack| download_asset(pack.name, client.clone(), sender.clone()))
+            .pipe(join_parallel)
+            .await
+            .pipe(log_errors);
 
-#[derive(Deserialize)]
-pub struct PackData {
-    pub name: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateInfo {
-    pub ab_infos: Vec<AssetData>,
-    pub pack_infos: Vec<PackData>,
-}
-
-impl UpdateInfo {
-    /// # Errors
-    /// Returns Err if the HTTP response fails in some way, or the response cannot be deserialized as `UpdateInfo`.
-    pub async fn fetch(client: &Client, url: &str) -> Result<Self> {
-        Ok(client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?)
+        // Some assets do not have a pack ID, so they need to be fetched separately
+        asset_info
+            .ab_infos
+            .iter()
+            .filter_map(|entry| {
+                entry
+                    .pack_id
+                    .is_none()
+                    .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
+            })
+            .pipe(join_parallel)
+            .await
+            .pipe(log_errors);
+    } else {
+        // Update collection of existing assets
+        asset_info
+            .ab_infos
+            .iter()
+            .filter_map(|entry| {
+                hashes
+                    .inner
+                    .get(&entry.name)
+                    .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
+                    .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
+            })
+            .pipe(join_parallel)
+            .await
+            .pipe(log_errors);
     }
 }
