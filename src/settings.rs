@@ -1,7 +1,6 @@
-use config::{Config, File, FileFormat};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{fs::read, path::PathBuf};
 
 #[derive(Deserialize, Serialize, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Server {
@@ -27,22 +26,10 @@ pub struct Settings {
     pub update_cache: bool,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct SettingsWrapper {
-    fetch_settings: Settings,
-}
-
 pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
-    let config = Config::builder()
-        .add_source(File::new("config.toml", FileFormat::Toml))
-        .build()
-        .expect("Failed to read configuration");
-
-    let mut settings = config
-        .try_deserialize::<SettingsWrapper>()
-        .expect("Failed to deserialize configuration file")
-        .fetch_settings;
+    let mut settings: Settings =
+        toml::from_slice(&read("config.toml").expect("Failed to read configuration file"))
+            .expect("Failed to deserialize configuration file");
 
     settings.server_url = match settings.server {
         Server::US => ServerLink {

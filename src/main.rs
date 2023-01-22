@@ -57,7 +57,7 @@ async fn main() {
             Python::with_gil(|py| {
                 let extract = py.import("kawapack").unwrap().getattr("extract").unwrap();
                 let data = PyBytes::new_with(py, bundle.data.len(), |bytes| {
-                    bytes.copy_from_slice(bundle.data.as_ref());
+                    bytes.copy_from_slice(&bundle.data);
                     Ok(())
                 })
                 .unwrap();
