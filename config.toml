@@ -1,4 +1,3 @@
-[fetch-settings]
 server = "US"
 versions_path = "versions.json"
 hashes_path = "hashes.json"
