@@ -1,10 +1,12 @@
 [tool.poetry]
 name = "arkdata"
-version = "0.1.0"
+version = "2.0.0"
 description = "Arknights game data"
-authors = ["astral4 <88992929+astral4@users.noreply.github.com>"]
 license = "AGPL-3.0-or-later"
+authors = ["astral4 <88992929+astral4@users.noreply.github.com>"]
 readme = "README.md"
+homepage = "https://github.com/astral4/arkdata"
+repository = "https://github.com/astral4/arkdata"
 
 [tool.poetry.dependencies]
 python = "^3.11"
