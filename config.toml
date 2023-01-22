@@ -2,6 +2,6 @@
 server = "US"
 details_path = "versions.json"
 hashes_path = "hashes.json"
-force_fetch = false
-output_dir = "results"
+force_fetch = true
+output_dir = "assets"
 update_cache = true

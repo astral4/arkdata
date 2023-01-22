@@ -2,7 +2,8 @@
 #![forbid(unsafe_code)]
 
 use arkdata::{
-    fetch_all, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG, VERSION,
+    combine_textures, fetch_all, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG,
+    VERSION,
 };
 use flume::unbounded;
 use pyo3::{types::PyBytes, Python};
@@ -71,4 +72,6 @@ async fn main() {
     fetch_all(&name_to_hash_mapping, asset_info, &client, sender).await;
 
     thread_handle.join().unwrap();
+
+    combine_textures();
 }
