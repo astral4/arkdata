@@ -188,7 +188,7 @@ pub async fn fetch_all(
                 hashes
                     .inner
                     .get(&entry.name)
-                    .map_or(true, |hash| CONFIG.force_fetch || hash != &entry.md5)
+                    .map_or(true, |hash| hash != &entry.md5)
                     .then(|| download_asset(entry.name.clone(), client.clone(), sender.clone()))
             })
             .pipe(join_parallel)

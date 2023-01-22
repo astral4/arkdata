@@ -21,9 +21,8 @@ pub struct Settings {
     pub server_url: ServerLink,
     pub versions_path: String,
     pub hashes_path: String,
-    pub force_fetch: bool,
-    pub output_dir: PathBuf,
     pub update_cache: bool,
+    pub output_dir: PathBuf,
 }
 
 pub static CONFIG: Lazy<Settings> = Lazy::new(|| {

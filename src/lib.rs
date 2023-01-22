@@ -30,6 +30,7 @@ pub trait Cache {
         Self: Serialize,
     {
         let file = File::create(path).unwrap_or_else(|_| panic!("Failed to open {path}"));
+
         serde_json::to_writer_pretty(file, &self)
             .unwrap_or_else(|_| panic!("Failed to serialize to {path}"));
     }

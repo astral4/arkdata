@@ -21,7 +21,7 @@ async fn main() {
         .build()
         .expect("Failed to build reqwest Client");
 
-    if !CONFIG.force_fetch && *version.get() == *VERSION {
+    if version.get() == &*VERSION {
         return;
     }
 

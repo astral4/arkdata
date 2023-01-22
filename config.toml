@@ -1,6 +1,14 @@
+# The server to fetch assets from. Current available options are US and CN.
 server = "US"
+
+# The path to cache resource versions at
 versions_path = "versions.json"
+
+# The path to cache asset hashes at
 hashes_path = "hashes.json"
-force_fetch = true
-output_dir = "assets"
+
+# If set to false, the files at versions_path and hashes_path will not be updated.
 update_cache = true
+
+# The output directory for extracted assets
+output_dir = "assets"
