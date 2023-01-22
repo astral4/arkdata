@@ -3,9 +3,11 @@
 
 mod assets;
 mod details;
+mod imageproc;
 mod settings;
 pub use assets::{fetch_all, AssetBundle, NameHashMapping, UpdateInfo};
 pub use details::*;
+pub use imageproc::combine_textures;
 pub use settings::CONFIG;
 
 use serde::{Deserialize, Serialize};
