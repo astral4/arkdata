@@ -2,8 +2,8 @@
 #![forbid(unsafe_code)]
 
 use arkdata::{
-    combine_textures, fetch_all, AssetBundle, Cache, NameHashMapping, UpdateInfo, Version, CONFIG,
-    VERSION,
+    combine_textures, fetch_all, process_portraits, AssetBundle, Cache, NameHashMapping,
+    UpdateInfo, Version, CONFIG, VERSION,
 };
 use flume::unbounded;
 use pyo3::{types::PyBytes, Python};
@@ -74,4 +74,5 @@ async fn main() {
     thread_handle.join().unwrap();
 
     combine_textures();
+    process_portraits();
 }
