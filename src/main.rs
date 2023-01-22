@@ -13,7 +13,7 @@ use std::{fs, thread};
 
 #[tokio::main]
 async fn main() {
-    let version = Version::load(&CONFIG.details_path);
+    let version = Version::load(&CONFIG.versions_path);
     let mut name_to_hash_mapping = NameHashMapping::load(&CONFIG.hashes_path);
     let client = Client::builder()
         .https_only(true)
@@ -40,9 +40,9 @@ async fn main() {
     if CONFIG.update_cache {
         let mut version = version;
         version.set(VERSION.clone());
-        version.save(&CONFIG.details_path);
+        version.save(&CONFIG.versions_path);
 
-        name_to_hash_mapping.update(&asset_info);
+        name_to_hash_mapping.set(&asset_info);
         name_to_hash_mapping.save(&CONFIG.hashes_path);
     }
 

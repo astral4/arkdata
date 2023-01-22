@@ -20,7 +20,7 @@ pub struct Settings {
     pub server: Server,
     #[serde(skip)]
     pub server_url: ServerLink,
-    pub details_path: String,
+    pub versions_path: String,
     pub hashes_path: String,
     pub force_fetch: bool,
     pub output_dir: PathBuf,

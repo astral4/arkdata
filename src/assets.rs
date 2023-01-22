@@ -26,7 +26,7 @@ pub struct NameHashMapping {
 impl Cache for NameHashMapping {}
 
 impl NameHashMapping {
-    pub fn update(&mut self, data: &UpdateInfo) {
+    pub fn set(&mut self, data: &UpdateInfo) {
         self.inner = data
             .ab_infos
             .iter()
@@ -137,12 +137,7 @@ async fn download_asset(name: String, client: Client, sender: Sender<AssetBundle
 
             sender
                 .send(AssetBundle {
-                    path: CONFIG
-                        .output_dir
-                        .join(file.mangled_name())
-                        .parent()
-                        .unwrap()
-                        .to_path_buf(),
+                    path: file.mangled_name().parent().unwrap().to_path_buf(),
                     data: buffer.into(),
                 })
                 .unwrap_or_else(|_| {
