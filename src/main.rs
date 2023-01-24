@@ -37,15 +37,6 @@ async fn main() {
         .expect("Failed to fetch asset info list")
     };
 
-    if CONFIG.update_cache {
-        let mut version = version;
-        version.set(VERSION.clone());
-        version.save(&CONFIG.versions_path);
-
-        name_to_hash_mapping.set(&asset_info);
-        name_to_hash_mapping.save(&CONFIG.hashes_path);
-    }
-
     if !CONFIG.output_dir.is_dir() {
         fs::create_dir_all(&CONFIG.output_dir).expect("Failed to create output directory");
     }
@@ -69,7 +60,16 @@ async fn main() {
         });
     });
 
-    fetch_all(&name_to_hash_mapping, asset_info, &client, sender).await;
+    fetch_all(&name_to_hash_mapping, &asset_info, &client, sender).await;
+
+    if CONFIG.update_cache {
+        let mut version = version;
+        version.set(VERSION.clone());
+        version.save(&CONFIG.versions_path);
+
+        name_to_hash_mapping.set(&asset_info);
+        name_to_hash_mapping.save(&CONFIG.hashes_path);
+    }
 
     thread_handle.join().unwrap();
 

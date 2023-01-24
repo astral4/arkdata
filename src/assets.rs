@@ -151,7 +151,7 @@ async fn download_asset(name: String, client: Client, sender: Sender<AssetBundle
 
 pub async fn fetch_all(
     hashes: &NameHashMapping,
-    asset_info: UpdateInfo,
+    asset_info: &UpdateInfo,
     client: &Client,
     sender: Sender<AssetBundle>,
 ) {
@@ -160,8 +160,8 @@ pub async fn fetch_all(
         // Download asset packs
         asset_info
             .pack_infos
-            .into_iter()
-            .map(|pack| download_asset(pack.name, client.clone(), sender.clone()))
+            .iter()
+            .map(|pack| download_asset(pack.name.clone(), client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
