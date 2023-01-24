@@ -41,7 +41,7 @@ async fn main() {
         fs::create_dir_all(&CONFIG.output_dir).expect("Failed to create output directory");
     }
 
-    let (sender, receiver) = bounded::<AssetBundle>(2);
+    let (sender, receiver) = bounded::<AssetBundle>(10);
 
     let thread_handle = thread::spawn(|| {
         receiver.into_iter().par_bridge().for_each(|bundle| {
