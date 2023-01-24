@@ -10,7 +10,7 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         pipx install poetry
-        poetry export -f requirements.txt -o requirements.txt
+        poetry export -f requirements.txt -o requirements.txt --without-hashes
     - uses: actions/setup-python@v4
       with:
         python-version: "3.11"
