@@ -25,7 +25,7 @@ jobs:
         username: ${{ secrets.SSH_USERNAME }}
         command_timeout: "60s"
         key: ${{ secrets.SSH_KEY }}
-        source: "target/release"
-        target: "/"
+        source: "target/release/arkdata"
+        target: "./"
         overwrite: true
-        strip_components: 2
+        strip_components: 3
