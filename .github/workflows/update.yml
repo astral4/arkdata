@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - run: |
+        pipx install poetry
+        poetry export -f requirements.txt -o requirements.txt
     - uses: actions/setup-python@v4
       with:
         python-version: "3.11"
         cache: "pip"
-    - run: |
-        pipx install poetry
-        poetry export -f requirements.txt -o requirements.txt
-        pip install -r requirements.txt
+    - run: pip install -r requirements.txt
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2
     - run: cargo build --release
