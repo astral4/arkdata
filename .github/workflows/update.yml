@@ -28,4 +28,4 @@ jobs:
         source: "target/release/arkdata"
         target: "./"
         overwrite: true
-        strip_components: 3
+        strip_components: 2
