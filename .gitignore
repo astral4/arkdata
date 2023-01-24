@@ -13,4 +13,5 @@ target/
 .vscode/
 __pycache__/
 
+cache/
 assets/

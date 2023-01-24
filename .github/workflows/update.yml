@@ -1,0 +1,30 @@
+name: Update app
+
+on:
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        cache: "pip"
+    - run: |
+        pipx install poetry
+        poetry export -f requirements.txt -o requirements.txt
+        pip install -r requirements.txt
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - run: cargo build --release
+    - uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        command_timeout: "60s"
+        key: ${{ secrets.SSH_KEY }}
+        source: "./target/release/arkdata"
+        target: "./arkdata"
+        overwrite: true
