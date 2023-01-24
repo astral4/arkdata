@@ -5,7 +5,7 @@ use arkdata::{
     combine_textures, fetch_all, process_portraits, AssetBundle, Cache, NameHashMapping,
     UpdateInfo, Version, CONFIG, VERSION,
 };
-use flume::unbounded;
+use flume::bounded;
 use pyo3::{types::PyBytes, Python};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use reqwest::Client;
@@ -41,7 +41,7 @@ async fn main() {
         fs::create_dir_all(&CONFIG.output_dir).expect("Failed to create output directory");
     }
 
-    let (sender, receiver) = unbounded::<AssetBundle>();
+    let (sender, receiver) = bounded::<AssetBundle>(50);
 
     let thread_handle = thread::spawn(|| {
         receiver.into_iter().par_bridge().for_each(|bundle| {
