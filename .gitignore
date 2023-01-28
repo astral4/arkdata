@@ -12,6 +12,3 @@ target/
 .DS_Store
 .vscode/
 __pycache__/
-
-cache/
-assets/

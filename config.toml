@@ -1,5 +1,5 @@
 # The server to fetch assets from. Current available options are US and CN.
-server = "US"
+server = "CN"
 
 # The path to cache resource versions at
 versions_path = "cache/versions.json"
