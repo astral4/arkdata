@@ -16,6 +16,13 @@ use tap::Pipe;
 use tokio::task::spawn_blocking;
 use zip::ZipArchive;
 
+fn is_in_whitelist(test: &str) -> bool {
+    CONFIG
+        .path_whitelist
+        .as_ref()
+        .map_or(true, |list| list.iter().any(|p| test.contains(p)))
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct NameHashMapping {
     #[serde(flatten)]
@@ -29,7 +36,9 @@ impl NameHashMapping {
         self.inner = data
             .ab_infos
             .iter()
-            .map(|asset| (asset.name.clone(), asset.md5.clone()))
+            .filter_map(|asset| {
+                is_in_whitelist(&asset.name).then(|| (asset.name.clone(), asset.md5.clone()))
+            })
             .collect();
     }
 }
@@ -78,13 +87,6 @@ impl UpdateInfo {
             .json()
             .await?)
     }
-}
-
-fn is_in_whitelist(test: &str) -> bool {
-    CONFIG
-        .path_whitelist
-        .as_ref()
-        .map_or(true, |list| list.iter().any(|p| test.contains(p)))
 }
 
 fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
