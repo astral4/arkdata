@@ -23,6 +23,7 @@ pub struct Settings {
     pub hashes_path: String,
     pub update_cache: bool,
     pub output_dir: PathBuf,
+    pub path_whitelist: Option<Vec<String>>,
 }
 
 pub static CONFIG: Lazy<Settings> = Lazy::new(|| {

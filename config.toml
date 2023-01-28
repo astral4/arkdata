@@ -1,4 +1,5 @@
-# The server to fetch assets from. Current available options are US and CN.
+# The server to fetch assets from
+# Current available options are US and CN
 server = "CN"
 
 # The path to cache resource versions at
@@ -7,8 +8,11 @@ versions_path = "cache/versions.json"
 # The path to cache asset hashes at
 hashes_path = "cache/hashes.json"
 
-# If set to false, the files at versions_path and hashes_path will not be updated.
+# If set to false, the files at versions_path and hashes_path will not be updated
 update_cache = true
 
 # The output directory for extracted assets
 output_dir = "assets"
+
+# Optional; an asset will only be processed if its path contains one of the paths in this list
+path_whitelist = ["spritepack/building_ui_buff_skills_h1_0.ab", "spritepack/ui_char_avatar_h1_0.ab"]
