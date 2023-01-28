@@ -10,6 +10,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Cursor, Read},
+    sync::Arc,
     time::Duration,
 };
 use tap::Pipe;
@@ -26,7 +27,7 @@ fn is_in_whitelist(test: &str) -> bool {
 #[derive(Serialize, Deserialize)]
 pub struct NameHashMapping {
     #[serde(flatten)]
-    inner: HashMap<String, String>,
+    inner: HashMap<Arc<str>, Arc<str>>,
 }
 
 impl Cache for NameHashMapping {}
@@ -57,15 +58,15 @@ pub struct AssetBundle {
 
 #[derive(Deserialize)]
 struct AssetData {
-    name: String,
-    md5: String,
+    name: Arc<str>,
+    md5: Arc<str>,
     #[serde(rename = "pid")]
     pack_id: Option<String>,
 }
 
 #[derive(Deserialize)]
 struct PackData {
-    name: String,
+    name: Arc<str>,
 }
 
 #[derive(Deserialize)]
@@ -110,7 +111,7 @@ async fn join_parallel<T: Send + 'static>(
 }
 
 async fn download_asset(
-    name: String,
+    name: Arc<str>,
     is_pack: bool,
     client: Client,
     sender: Sender<AssetBundle>,
