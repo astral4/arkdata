@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::{fs::read, path::PathBuf};
+use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Deserialize, Serialize, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Server {
@@ -27,7 +27,7 @@ pub struct Settings {
 
 pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
     let mut settings: Settings =
-        toml::from_slice(&read("config.toml").expect("Failed to read configuration file"))
+        toml::from_str(&read_to_string("config.toml").expect("Failed to read configuration file"))
             .expect("Failed to deserialize configuration file");
 
     settings.server_url = match settings.server {

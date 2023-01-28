@@ -65,7 +65,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(clippy::let_underscore_drop)]
     async fn get_version() {
         let _ = VERSION;
     }
