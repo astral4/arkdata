@@ -46,7 +46,9 @@ jobs:
         git config --global user.name "Kawabot"
         git config --global user.email "actions@users.noreply.github.com"
         git pull --all
-        git add .
+        git add versions.json
+        git add hashes.json
+        git add assets
         git diff-index --quiet HEAD || git commit -m "Update data" && git push
 
     
