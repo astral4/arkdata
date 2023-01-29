@@ -37,9 +37,8 @@ impl NameHashMapping {
         self.inner = data
             .ab_infos
             .iter()
-            .filter_map(|asset| {
-                is_in_whitelist(&asset.name).then(|| (asset.name.clone(), asset.md5.clone()))
-            })
+            .filter(|asset| is_in_whitelist(&asset.name))
+            .map(|asset| (asset.name.clone(), asset.md5.clone()))
             .collect();
     }
 }
@@ -196,11 +195,8 @@ pub async fn fetch_all(
         asset_info
             .ab_infos
             .iter()
-            .filter_map(|entry| {
-                (entry.pack_id.is_none() && is_in_whitelist(&entry.name)).then(|| {
-                    download_asset(entry.name.clone(), false, client.clone(), sender.clone())
-                })
-            })
+            .filter(|entry| entry.pack_id.is_none() && is_in_whitelist(&entry.name))
+            .map(|entry| download_asset(entry.name.clone(), false, client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -209,14 +205,14 @@ pub async fn fetch_all(
         asset_info
             .ab_infos
             .iter()
-            .filter_map(|entry| {
-                (is_in_whitelist(&entry.name)
+            .filter(|entry| {
+                is_in_whitelist(&entry.name)
                     && hashes
                         .inner
                         .get(&entry.name)
-                        .map_or(true, |hash| hash != &entry.md5))
-                .then(|| download_asset(entry.name.clone(), false, client.clone(), sender.clone()))
+                        .map_or(true, |hash| hash != &entry.md5)
             })
+            .map(|entry| download_asset(entry.name.clone(), false, client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
