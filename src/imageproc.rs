@@ -1,30 +1,34 @@
 use crate::CONFIG;
 use glob::glob;
-use image::open;
+use image::{imageops::FilterType, open, DynamicImage, GenericImageView};
 use rayon::iter::{IntoParallelRefIterator, ParallelBridge, ParallelIterator};
 use serde::{de, Deserialize};
 use std::{
     fs::{remove_file, File},
     io::BufReader,
     iter::zip,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 const ALPHA_SUFFIXES: [&str; 3] = ["_alpha", "[alpha]", "a"];
 
-fn get_rgb_path(path: PathBuf) -> Option<(PathBuf, PathBuf)> {
-    if let Some(stem) = path.file_stem() {
+fn get_rgb_path(path: &Path) -> Option<PathBuf> {
+    path.file_stem().and_then(|stem| {
         let stem_str = stem.to_string_lossy();
-        for suffix in ALPHA_SUFFIXES {
-            if stem_str.ends_with(suffix) {
-                return Some((
-                    path.with_file_name(format!("{}.png", stem_str.rsplit_once(suffix).unwrap().0)),
-                    path,
-                ));
-            }
-        }
+        ALPHA_SUFFIXES.iter().find_map(|suffix| {
+            stem_str.ends_with(suffix).then(|| {
+                path.with_file_name(format!("{}.png", stem_str.rsplit_once(suffix).unwrap().0))
+            })
+        })
+    })
+}
+
+fn resize_alpha_layer(rgb: &DynamicImage, alpha: DynamicImage) -> DynamicImage {
+    let rgb_dims = rgb.dimensions();
+    if rgb_dims != alpha.dimensions() {
+        return alpha.resize_exact(rgb_dims.0, rgb_dims.1, FilterType::Lanczos3);
     }
-    None
+    alpha
 }
 
 /// # Panics
@@ -34,12 +38,12 @@ pub fn combine_textures() {
         .expect("Failed to construct valid glob pattern")
         .par_bridge()
         .filter_map(Result::ok)
-        .filter_map(get_rgb_path)
+        .filter_map(|path| get_rgb_path(&path).map(|rgb_path| (rgb_path, path)))
         .for_each(|paths| {
             if let Ok(rgb_image) = open(&paths.0) {
                 if let Ok(alpha_image) = open(&paths.1) {
+                    let alpha_image = resize_alpha_layer(&rgb_image, alpha_image).into_luma8();
                     let mut rgb_image = rgb_image.into_rgba8();
-                    let alpha_image = alpha_image.into_luma8();
 
                     zip(rgb_image.pixels_mut(), alpha_image.pixels())
                         .par_bridge()
