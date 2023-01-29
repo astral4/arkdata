@@ -12,3 +12,16 @@ target/
 .DS_Store
 .vscode/
 __pycache__/
+
+# Unneeded
+**/SpriteAtlasTexture-*.png
+
+# Ignore Spine-related assets
+assets/chararts/*/*
+assets/chararts/build_*
+*.atlas
+*.skel
+
+assets/chararts/char_*.png
+!assets/chararts/char_*_1*.png
+!assets/chararts/char_*_2*.png

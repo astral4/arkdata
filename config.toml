@@ -15,4 +15,10 @@ update_cache = true
 output_dir = "assets"
 
 # Optional; an asset will only be processed if its path contains one of the paths in this list
-path_whitelist = ["arts/building/buffs/buff_icon_hub.ab", "spritepack/building_ui_buff_skills_h1_0.ab", "spritepack/ui_char_avatar_h1_0.ab"]
+path_whitelist = [
+    "arts/building/buffs/buff_icon_hub.ab",
+    "spritepack/building_ui_buff_skills_h1_0.ab",
+    "spritepack/ui_char_avatar",
+    "arts/charportraits",
+    "chararts"
+]
