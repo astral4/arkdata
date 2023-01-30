@@ -18,9 +18,5 @@ output_dir = "assets"
 path_whitelist = [
     "arts/building/buffs/buff_icon_hub.ab",         # Facility icons
     "spritepack/building_ui_buff_skills_h1_0.ab",   # Base skill icons
-    "spritepack/ui_char_avatar",                    # Operator avatars (E0, E2, skin)
-    "arts/charportraits",                           # Operator portraits (E0, E2, skin)
-    "chararts",                                     # Operator artworks (E0, E2); includes Spine assets
-    "skinpack",                                     # Operator artworks (skin); includes Spine assets
-    "ui_equip_big_img_hub_h1",                      # Equipment modules
+    "spritepack/ui_char_avatar_h1_0.ab",            # Operator avatars (E0)
 ]
