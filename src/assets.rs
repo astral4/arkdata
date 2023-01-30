@@ -10,6 +10,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Cursor, Read},
+    path::PathBuf,
     sync::Arc,
     time::Duration,
 };
@@ -51,7 +52,7 @@ static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
 });
 
 pub struct AssetBundle {
-    pub path: String,
+    pub path: PathBuf,
     pub data: Bytes,
 }
 
@@ -109,12 +110,7 @@ async fn join_parallel<T: Send + 'static>(
         .collect()
 }
 
-async fn download_asset(
-    name: Arc<str>,
-    is_pack: bool,
-    client: Client,
-    sender: Sender<AssetBundle>,
-) -> Result<()> {
+async fn download_asset(name: Arc<str>, client: Client, sender: Sender<AssetBundle>) -> Result<()> {
     let url = format!(
         "{}/assets/{}/{}.dat",
         CONFIG.server_url.base,
@@ -140,18 +136,6 @@ async fn download_asset(
                 panic!("Failed to read zip file at index {i} in archive at {name}")
             });
 
-            let path = file
-                .mangled_name()
-                .parent()
-                .unwrap()
-                .to_path_buf()
-                .to_string_lossy()
-                .to_string();
-
-            if is_pack && !is_in_whitelist(&path) {
-                continue;
-            }
-
             let mut buffer = Vec::with_capacity(
                 file.size()
                     .try_into()
@@ -162,7 +146,7 @@ async fn download_asset(
 
             sender
                 .send(AssetBundle {
-                    path,
+                    path: file.mangled_name().parent().unwrap().to_path_buf(),
                     data: buffer.into(),
                 })
                 .unwrap_or_else(|_| {
@@ -186,7 +170,7 @@ pub async fn fetch_all(
         asset_info
             .pack_infos
             .iter()
-            .map(|pack| download_asset(pack.name.clone(), true, client.clone(), sender.clone()))
+            .map(|pack| download_asset(pack.name.clone(), client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -196,7 +180,7 @@ pub async fn fetch_all(
             .ab_infos
             .iter()
             .filter(|entry| entry.pack_id.is_none() && is_in_whitelist(&entry.name))
-            .map(|entry| download_asset(entry.name.clone(), false, client.clone(), sender.clone()))
+            .map(|entry| download_asset(entry.name.clone(), client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -212,7 +196,7 @@ pub async fn fetch_all(
                         .get(&entry.name)
                         .map_or(true, |hash| hash != &entry.md5)
             })
-            .map(|entry| download_asset(entry.name.clone(), false, client.clone(), sender.clone()))
+            .map(|entry| download_asset(entry.name.clone(), client.clone(), sender.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
