@@ -1,26 +1,44 @@
 use crate::CONFIG;
 use glob::glob;
 use image::{imageops::FilterType, open, DynamicImage, GenericImageView};
+use imagepath::RgbaPath;
 use rayon::iter::{IntoParallelRefIterator, ParallelBridge, ParallelIterator};
 use serde::{de, Deserialize};
 use std::{
     fs::{remove_file, File},
     io::BufReader,
     iter::zip,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
-const ALPHA_SUFFIXES: [&str; 3] = ["_alpha", "[alpha]", "a"];
+mod imagepath {
+    use std::path::{Path, PathBuf};
 
-fn get_rgb_path(path: &Path) -> Option<PathBuf> {
-    path.file_stem().and_then(|stem| {
-        let stem_str = stem.to_string_lossy();
-        ALPHA_SUFFIXES.iter().find_map(|suffix| {
-            stem_str.ends_with(suffix).then(|| {
-                path.with_file_name(format!("{}.png", stem_str.rsplit_once(suffix).unwrap().0))
+    const ALPHA_SUFFIXES: [&str; 3] = ["_alpha", "[alpha]", "a"];
+
+    pub struct RgbaPath {
+        pub rgb: PathBuf,
+        pub alpha: PathBuf,
+    }
+
+    impl RgbaPath {
+        fn get_rgb_path(path: &Path) -> Option<PathBuf> {
+            path.file_stem().and_then(|stem| {
+                let stem_str = stem.to_string_lossy();
+                ALPHA_SUFFIXES.iter().find_map(|suffix| {
+                    stem_str.ends_with(suffix).then(|| {
+                        path.with_file_name(format!(
+                            "{}.png",
+                            stem_str.rsplit_once(suffix).unwrap().0
+                        ))
+                    })
+                })
             })
-        })
-    })
+        }
+        pub fn new(alpha: PathBuf) -> Option<Self> {
+            Self::get_rgb_path(&alpha).map(|rgb| Self { rgb, alpha })
+        }
+    }
 }
 
 fn resize_alpha_layer(rgb: &DynamicImage, alpha: DynamicImage) -> DynamicImage {
@@ -38,10 +56,10 @@ pub fn combine_textures() {
         .expect("Failed to construct valid glob pattern")
         .par_bridge()
         .filter_map(Result::ok)
-        .filter_map(|path| get_rgb_path(&path).map(|rgb_path| (rgb_path, path)))
+        .filter_map(RgbaPath::new)
         .for_each(|paths| {
-            if let Ok(rgb_image) = open(&paths.0) {
-                if let Ok(alpha_image) = open(&paths.1) {
+            if let Ok(rgb_image) = open(&paths.rgb) {
+                if let Ok(alpha_image) = open(&paths.alpha) {
                     let alpha_image = resize_alpha_layer(&rgb_image, alpha_image).into_luma8();
                     let mut rgb_image = rgb_image.into_rgba8();
 
@@ -51,11 +69,11 @@ pub fn combine_textures() {
                             rgb_pixel.0[3] = alpha_pixel.0[0];
                         });
 
-                    rgb_image.save(&paths.0).unwrap_or_else(|_| {
-                        panic!("Failed to save image to {}", paths.0.to_string_lossy())
+                    rgb_image.save(&paths.rgb).unwrap_or_else(|_| {
+                        panic!("Failed to save image to {}", paths.rgb.display())
                     });
-                    remove_file(&paths.1).unwrap_or_else(|_| {
-                        panic!("Failed to delete image at {}", paths.1.to_string_lossy())
+                    remove_file(&paths.alpha).unwrap_or_else(|_| {
+                        panic!("Failed to delete image at {}", paths.alpha.display())
                     });
                 }
             }
@@ -128,12 +146,10 @@ pub fn process_portraits() {
         .filter_map(Result::ok)
         .for_each(|data_path| {
             let file = File::open(&data_path)
-                .unwrap_or_else(|_| panic!("Failed to open {}", data_path.to_string_lossy()));
+                .unwrap_or_else(|_| panic!("Failed to open {}", data_path.display()));
 
-            let data: PortraitData =
-                serde_json::from_reader(BufReader::new(file)).unwrap_or_else(|_| {
-                    panic!("Failed to deserialize from {}", data_path.to_string_lossy())
-                });
+            let data: PortraitData = serde_json::from_reader(BufReader::new(file))
+                .unwrap_or_else(|_| panic!("Failed to deserialize from {}", data_path.display()));
 
             let portrait_path = portrait_dir.join(data.name).with_extension("png");
 
@@ -153,15 +169,12 @@ pub fn process_portraits() {
 
                     let target_path = portrait_dir.join(&sprite.name).with_extension("png");
                     portrait.save(&target_path).unwrap_or_else(|_| {
-                        panic!("Failed to save image to {}", target_path.to_string_lossy())
+                        panic!("Failed to save image to {}", target_path.display())
                     });
                 });
 
                 remove_file(&portrait_path).unwrap_or_else(|_| {
-                    panic!(
-                        "Failed to delete image at {}",
-                        portrait_path.to_string_lossy()
-                    )
+                    panic!("Failed to delete image at {}", portrait_path.display())
                 });
             }
         });
