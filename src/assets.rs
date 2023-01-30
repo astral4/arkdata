@@ -180,7 +180,7 @@ pub async fn fetch_all(
     client: &Client,
     sender: Sender<AssetBundle>,
 ) {
-    if hashes.inner.is_empty() {
+    if hashes.inner.is_empty() && CONFIG.path_whitelist.is_none() {
         // No assets have been downloaded before
         // Download asset packs
         asset_info
