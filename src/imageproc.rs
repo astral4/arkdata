@@ -35,7 +35,7 @@ mod imagepath {
                 })
             })
         }
-        pub fn new(alpha: PathBuf) -> Option<Self> {
+        pub fn from_alpha_path(alpha: PathBuf) -> Option<Self> {
             Self::get_rgb_path(&alpha).map(|rgb| Self { rgb, alpha })
         }
     }
@@ -56,7 +56,7 @@ pub fn combine_textures() {
         .expect("Failed to construct valid glob pattern")
         .par_bridge()
         .filter_map(Result::ok)
-        .filter_map(RgbaPath::new)
+        .filter_map(RgbaPath::from_alpha_path)
         .for_each(|paths| {
             if let Ok(rgb_image) = open(&paths.rgb) {
                 if let Ok(alpha_image) = open(&paths.alpha) {
