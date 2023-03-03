@@ -12,25 +12,25 @@ publish = false
 [dependencies]
 again = { version = "0.1.2", default-features = false, features = ["rand"] }
 ahash = { version = "0.8.3", features = ["serde"] }
-anyhow = "1.0.68"
-bytes = "1.3.0"
+anyhow = "1.0.69"
+bytes = "1.4.0"
 flume = "0.10.14"
-futures = "0.3.25"
+futures = "0.3.26"
 glob = "0.3.1"
 image = { version = "0.24.5", default-features = false, features = ["png"] }
-once_cell = "1.17.0"
-pyo3 = { version = "0.18.0", default-features = false, features = ["auto-initialize"] }
+once_cell = "1.17.1"
+pyo3 = { version = "0.18.1", default-features = false, features = ["auto-initialize"] }
 rayon = "1.6.1"
 reqwest = { version = "0.11.14", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 serde = { version = "1.0.152", features = ["derive", "rc"] }
-serde_json = "1.0.91"
+serde_json = "1.0.93"
 tap = "1.0.1"
-tokio = { version = "1.25.0", features = ["rt-multi-thread", "macros"] }
-toml = "0.7.0"
-zip = "0.6.3"
+tokio = { version = "1.26.0", features = ["rt-multi-thread", "macros"] }
+toml = "0.7.2"
+zip = "0.6.4"
 
 [dev-dependencies]
-uuid = { version = "1.2.2", default-features = false, features = ["v4"] }
+uuid = { version = "1.3.0", default-features = false, features = ["v4"] }
 
 [profile.release]
 strip = true
