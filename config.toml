@@ -19,7 +19,4 @@ path_whitelist = [
     "arts/building/buffs/buff_icon_hub.ab",         # Facility icons
     "spritepack/building_ui_buff_skills_h1_0.ab",   # Base skill icons
     "spritepack/ui_char_avatar_h1_0.ab",            # Operator avatars (E0)
-    "gamedata/excel/character_table.ab",            # Operator data
-    "gamedata/excel/building_data.ab",              # Base data
-    "gamedata/excel/gamedata_const.ab",             # Misc. game data
 ]

@@ -1,8 +1,5 @@
 {
-  "gamedata/excel/building_data.ab": "48f0fb491362bf1ea6813694fbba632c",
-  "gamedata/excel/gamedata_const.ab": "5a7149c042a501c89b7d1aa44923cf68",
-  "gamedata/excel/character_table.ab": "1022506d977cbefa281e5372da5020a0",
-  "spritepack/building_ui_buff_skills_h1_0.ab": "93d681c73adf57d7baf671f8203d84f6",
+  "spritepack/ui_char_avatar_h1_0.ab": "93e2f5111d0f16bed306bae6666bb6db",
   "arts/building/buffs/buff_icon_hub.ab": "4134a6621adafc336bb76c1a91db90b1",
-  "spritepack/ui_char_avatar_h1_0.ab": "93e2f5111d0f16bed306bae6666bb6db"
+  "spritepack/building_ui_buff_skills_h1_0.ab": "93d681c73adf57d7baf671f8203d84f6"
 }
