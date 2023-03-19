@@ -19,4 +19,5 @@ path_whitelist = [
     "arts/building/buffs/buff_icon_hub.ab",         # Facility icons
     "spritepack/building_ui_buff_skills_h1_0.ab",   # Base skill icons
     "spritepack/ui_char_avatar_h1_0.ab",            # Operator avatars (E0)
+    "spritepack/ui_item_icons_h1_0.ab",             # Item icons
 ]
