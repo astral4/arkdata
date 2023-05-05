@@ -1,7 +1,6 @@
 {
-  "arts/building/buffs/buff_icon_hub.ab": "4134a6621adafc336bb76c1a91db90b1",
   "spritepack/ui_char_avatar_h1_0.ab": "10997f5be04909a759c90957ea9af033",
   "spritepack/building_ui_buff_skills_h1_0.ab": "50c684ab2dbc0864faf916f02fed55fa",
-  "spritepack/ui_item_icons_h1_0.ab": "0e221266212b82a6b4e12f3f2901f954",
-  "gamedata/excel/building_data5c6a48.ab": "4836d9fa6ad98c18580047f1664986f8"
+  "arts/building/buffs/buff_icon_hub.ab": "4134a6621adafc336bb76c1a91db90b1",
+  "spritepack/ui_item_icons_h1_0.ab": "0e221266212b82a6b4e12f3f2901f954"
 }
