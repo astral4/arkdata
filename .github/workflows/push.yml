@@ -38,6 +38,18 @@ jobs:
     - name: Run app
       run: ./target/release/arkdata
 
+    - name: Install flatc
+      run: sudo apt install -y flatbuffers-compiler
+
+    - name: Process base data
+      run: |
+        cd assets/torappu/dynamicassets/gamedata/excel
+        rm -f building_data.json
+        dd bs=128 skip=1 if=$(find . -name 'building_data*') of=temp.bin
+        flatc --json --raw-binary --strict-json --natural-utf8 ../../../../../schemas/building_data.fbs -- temp.bin
+        rm temp.bin $(find . -name 'building_data*')
+        mv temp.json building_data.json
+
     - name: Commit updates
       run: |
         git config --global user.name "Kawabot"
