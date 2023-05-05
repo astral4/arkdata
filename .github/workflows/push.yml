@@ -39,7 +39,7 @@ jobs:
       run: ./target/release/arkdata
 
     - name: Install flatc
-      run: apt install -y flatbuffers-compiler
+      run: sudo apt install -y flatbuffers-compiler
 
     - name: Process base data
       run: |
