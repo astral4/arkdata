@@ -66,7 +66,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_version() {
-        let _ = VERSION;
+        _ = VERSION;
     }
 
     #[test]
