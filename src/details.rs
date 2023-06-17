@@ -3,7 +3,7 @@ use ahash::HashMap;
 use once_cell::sync::Lazy;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::{cmp::max, thread::sleep, time::Duration};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct VersionInner {
@@ -42,14 +42,20 @@ pub static VERSION: Lazy<VersionInner> = Lazy::new(|| {
         .build()
         .expect("Failed to build reqwest Client");
 
-    client
-        .get(&CONFIG.server_url.version)
-        .send()
-        .expect("Failed to send request")
-        .error_for_status()
-        .expect("Failed to get a successful response from server")
-        .json()
-        .expect("Failed to get the response body")
+    for idx in 0..5 {
+        match (|| {
+            client
+                .get(&CONFIG.server_url.version)
+                .send()?
+                .error_for_status()?
+                .json()
+        })() {
+            Ok(version) => return version,
+            Err(e) => println!("{e}"),
+        }
+        sleep(Duration::from_secs(max(3u64.pow(idx + 1), 20)));
+    }
+    panic!("Failed to fetch resource version from server");
 });
 
 #[cfg(test)]
