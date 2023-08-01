@@ -9,7 +9,7 @@ versions_path = "cache/versions.json"
 hashes_path = "cache/hashes.json"
 
 # If set to false, the files at versions_path and hashes_path will not be updated
-update_cache = false
+update_cache = true
 
 # The output directory for extracted assets
 output_dir = "assets"
