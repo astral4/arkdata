@@ -9,15 +9,23 @@ versions_path = "cache/versions.json"
 hashes_path = "cache/hashes.json"
 
 # If set to false, the files at versions_path and hashes_path will not be updated
-update_cache = true
+update_cache = false
 
 # The output directory for extracted assets
 output_dir = "assets"
 
 # Optional; an asset will only be processed if its path contains one of the paths in this list
 path_whitelist = [
-    "arts/building/buffs/buff_icon_hub.ab",         # Facility icons
-    "spritepack/building_ui_buff_skills_h1_0.ab",   # Base skill icons
-    "spritepack/ui_char_avatar_h1_0.ab",            # Operator avatars (E0)
-    "spritepack/ui_item_icons_h1_0.ab",             # Item icons
+    "arts/building/buffs/buff_icon_hub.ab",       # Facility icons
+    "spritepack/building_ui_buff_skills_h1_0.ab", # Base skill icons
+    "spritepack/ui_char_avatar_0.ab",             # Operator avatars
+    "spritepack/ui_char_avatar_1.ab",
+    "spritepack/ui_char_avatar_2.ab",
+    "spritepack/ui_char_avatar_3.ab",
+    "spritepack/ui_char_avatar_4.ab",
+    "spritepack/ui_char_avatar_5.ab",
+    "spritepack/ui_char_avatar_6.ab",
+    "spritepack/ui_char_avatar_7.ab",
+    "spritepack/ui_char_avatar_8.ab",
+    "spritepack/ui_item_icons_h1_0.ab",           # Item icons
 ]
