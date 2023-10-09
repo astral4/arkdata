@@ -9,9 +9,8 @@ homepage = "https://github.com/astral4/arkdata"
 repository = "https://github.com/astral4/arkdata"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-kawapack = "^0.15.1"
-
+python = "^3.12"
+kawapack = "^0.15.2"
 
 [build-system]
 requires = ["poetry-core"]
