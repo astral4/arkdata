@@ -18,14 +18,6 @@ output_dir = "assets"
 path_whitelist = [
     "arts/building/buffs/buff_icon_hub.ab",       # Facility icons
     "spritepack/building_ui_buff_skills_h1_0.ab", # Base skill icons
-    "spritepack/ui_char_avatar_0.ab",             # Operator avatars
-    "spritepack/ui_char_avatar_1.ab",
-    "spritepack/ui_char_avatar_2.ab",
-    "spritepack/ui_char_avatar_3.ab",
-    "spritepack/ui_char_avatar_4.ab",
-    "spritepack/ui_char_avatar_5.ab",
-    "spritepack/ui_char_avatar_6.ab",
-    "spritepack/ui_char_avatar_7.ab",
-    "spritepack/ui_char_avatar_8.ab",
+    "spritepack/ui_char_avatar_",                 # Operator avatars
     "spritepack/ui_item_icons_h1_0.ab",           # Item icons
 ]
