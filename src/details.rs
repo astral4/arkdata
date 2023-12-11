@@ -23,6 +23,7 @@ impl Cache for Version {}
 
 impl Version {
     #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn get(&self) -> &VersionInner {
         self.version
             .get(&CONFIG.server)
@@ -59,6 +60,7 @@ pub static VERSION: Lazy<VersionInner> = Lazy::new(|| {
 });
 
 #[cfg(test)]
+#[allow(clippy::should_panic_without_expect)]
 mod tests {
     use super::*;
     use crate::VERSION;
