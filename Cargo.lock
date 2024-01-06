@@ -66,7 +66,6 @@ dependencies = [
  "ahash",
  "anyhow",
  "bytes",
- "futures",
  "glob",
  "image",
  "once_cell",

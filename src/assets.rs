@@ -2,18 +2,18 @@ use crate::{Cache, CONFIG, VERSION};
 use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
-use futures::{future::join_all, Future};
 use once_cell::sync::Lazy;
 use pyo3::{types::PyBytes, Python};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
+    future::Future,
     io::{Cursor, Read},
     sync::Arc,
     time::Duration,
 };
 use tap::Pipe;
-use tokio::task::spawn_blocking;
+use tokio::task::{spawn_blocking, JoinHandle, JoinSet};
 use zip::ZipArchive;
 
 fn is_in_whitelist(test: &str) -> bool {
@@ -83,27 +83,23 @@ impl UpdateInfo {
     }
 }
 
-fn log_errors<T>(results: impl IntoIterator<Item = Result<T>>) {
-    results
-        .into_iter()
-        .filter_map(Result::err)
-        .for_each(|err| println!("{err}"));
+async fn process_parallel<I, F>(tasks: I)
+where
+    I: Iterator<Item = F>,
+    F: Future<Output = Result<JoinHandle<()>>> + Send + 'static,
+{
+    let mut set = JoinSet::new();
+
+    for task in tasks {
+        set.spawn(task);
+    }
+
+    while let Some(res) = set.join_next().await {
+        res.unwrap().unwrap().await.unwrap();
+    }
 }
 
-async fn join_parallel<T: Send + 'static>(
-    futs: impl IntoIterator<Item = impl Future<Output = T> + Send + 'static>,
-) -> Vec<T> {
-    let tasks: Vec<_> = futs.into_iter().map(tokio::spawn).collect();
-    // unwrap the Result because it is introduced by tokio::spawn()
-    // and isn't something our caller can handle
-    join_all(tasks)
-        .await
-        .into_iter()
-        .map(Result::unwrap)
-        .collect()
-}
-
-async fn download_asset(name: Arc<str>, client: Client) -> Result<()> {
+async fn download_asset(name: Arc<str>, client: Client) -> Result<JoinHandle<()>> {
     let url = format!(
         "{}/assets/{}/{}.dat",
         CONFIG.server_url.base,
@@ -120,7 +116,7 @@ async fn download_asset(name: Arc<str>, client: Client) -> Result<()> {
         .bytes()
         .await?;
 
-    spawn_blocking(move || {
+    let handle = spawn_blocking(move || {
         let mut archive = ZipArchive::new(Cursor::new(response))
             .unwrap_or_else(|_| panic!("Failed to create zip archive from response at {name}"));
 
@@ -156,7 +152,7 @@ async fn download_asset(name: Arc<str>, client: Client) -> Result<()> {
         }
     });
 
-    Ok(())
+    Ok(handle)
 }
 
 pub async fn fetch_all(hashes: &NameHashMapping, asset_info: &UpdateInfo, client: &Client) {
@@ -167,9 +163,8 @@ pub async fn fetch_all(hashes: &NameHashMapping, asset_info: &UpdateInfo, client
             .pack_infos
             .iter()
             .map(|pack| download_asset(pack.name.clone(), client.clone()))
-            .pipe(join_parallel)
-            .await
-            .pipe(log_errors);
+            .pipe(process_parallel)
+            .await;
 
         // Some assets do not have a pack ID, so they need to be fetched separately
         asset_info
@@ -177,9 +172,8 @@ pub async fn fetch_all(hashes: &NameHashMapping, asset_info: &UpdateInfo, client
             .iter()
             .filter(|entry| entry.pack_id.is_none() && is_in_whitelist(&entry.name))
             .map(|entry| download_asset(entry.name.clone(), client.clone()))
-            .pipe(join_parallel)
-            .await
-            .pipe(log_errors);
+            .pipe(process_parallel)
+            .await;
     } else {
         // Update collection of existing assets
         asset_info
@@ -193,8 +187,7 @@ pub async fn fetch_all(hashes: &NameHashMapping, asset_info: &UpdateInfo, client
                         .map_or(true, |hash| hash != &entry.md5)
             })
             .map(|entry| download_asset(entry.name.clone(), client.clone()))
-            .pipe(join_parallel)
-            .await
-            .pipe(log_errors);
+            .pipe(process_parallel)
+            .await;
     }
 }
