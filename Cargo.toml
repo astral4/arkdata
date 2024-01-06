@@ -14,7 +14,6 @@ again = { version = "0.1.2", default-features = false, features = ["rand"] }
 ahash = { version = "0.8.7", features = ["serde"] }
 anyhow = "1.0.79"
 bytes = "1.5.0"
-flume = "0.11.0"
 futures = "0.3.30"
 glob = "0.3.1"
 image = { version = "0.24.7", default-features = false, features = ["png"] }
@@ -25,7 +24,7 @@ reqwest = { version = "0.11.23", default-features = false, features = ["blocking
 serde = { version = "1.0.195", features = ["derive", "rc"] }
 serde_json = "1.0.111"
 tap = "1.0.1"
-tokio = { version = "1.35.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.35.1", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.8"
 zip = "0.6.6"
 

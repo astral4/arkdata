@@ -5,7 +5,7 @@ mod assets;
 mod details;
 mod imageproc;
 mod settings;
-pub use assets::{fetch_all, AssetBundle, NameHashMapping, UpdateInfo};
+pub use assets::{fetch_all, NameHashMapping, UpdateInfo};
 pub use details::{Version, VERSION};
 pub use imageproc::{combine_textures, process_portraits};
 pub use settings::CONFIG;

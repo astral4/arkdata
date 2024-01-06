@@ -2,15 +2,13 @@ use crate::{Cache, CONFIG, VERSION};
 use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
-use bytes::Bytes;
-use flume::Sender;
 use futures::{future::join_all, Future};
 use once_cell::sync::Lazy;
+use pyo3::{types::PyBytes, Python};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Cursor, Read},
-    path::PathBuf,
     sync::Arc,
     time::Duration,
 };
@@ -50,11 +48,6 @@ static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
         .with_jitter(true)
         .with_max_delay(Duration::from_secs(20))
 });
-
-pub struct AssetBundle {
-    pub path: PathBuf,
-    pub data: Bytes,
-}
 
 #[derive(Deserialize)]
 struct AssetData {
@@ -110,7 +103,7 @@ async fn join_parallel<T: Send + 'static>(
         .collect()
 }
 
-async fn download_asset(name: Arc<str>, client: Client, sender: Sender<AssetBundle>) -> Result<()> {
+async fn download_asset(name: Arc<str>, client: Client) -> Result<()> {
     let url = format!(
         "{}/assets/{}/{}.dat",
         CONFIG.server_url.base,
@@ -144,33 +137,36 @@ async fn download_asset(name: Arc<str>, client: Client, sender: Sender<AssetBund
 
             file.read_to_end(&mut buffer).unwrap();
 
-            sender
-                .send(AssetBundle {
-                    path: file.mangled_name().parent().unwrap().to_path_buf(),
-                    data: buffer.into(),
+            Python::with_gil(|py| {
+                let extract = py.import("kawapack").unwrap().getattr("extract").unwrap();
+                let data = PyBytes::new_with(py, buffer.len(), |bytes| {
+                    bytes.copy_from_slice(&buffer);
+                    Ok(())
                 })
-                .unwrap_or_else(|_| {
-                    panic!("Failed to send data across channel while processing {name}")
-                });
+                .unwrap();
+
+                extract
+                    .call1((
+                        data,
+                        file.mangled_name().parent().unwrap().to_path_buf(),
+                        &CONFIG.output_dir,
+                    ))
+                    .unwrap();
+            });
         }
     });
 
     Ok(())
 }
 
-pub async fn fetch_all(
-    hashes: &NameHashMapping,
-    asset_info: &UpdateInfo,
-    client: &Client,
-    sender: Sender<AssetBundle>,
-) {
+pub async fn fetch_all(hashes: &NameHashMapping, asset_info: &UpdateInfo, client: &Client) {
     if hashes.inner.is_empty() && CONFIG.path_whitelist.is_none() {
         // No assets have been downloaded before
         // Download asset packs
         asset_info
             .pack_infos
             .iter()
-            .map(|pack| download_asset(pack.name.clone(), client.clone(), sender.clone()))
+            .map(|pack| download_asset(pack.name.clone(), client.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -180,7 +176,7 @@ pub async fn fetch_all(
             .ab_infos
             .iter()
             .filter(|entry| entry.pack_id.is_none() && is_in_whitelist(&entry.name))
-            .map(|entry| download_asset(entry.name.clone(), client.clone(), sender.clone()))
+            .map(|entry| download_asset(entry.name.clone(), client.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
@@ -196,7 +192,7 @@ pub async fn fetch_all(
                         .get(&entry.name)
                         .map_or(true, |hash| hash != &entry.md5)
             })
-            .map(|entry| download_asset(entry.name.clone(), client.clone(), sender.clone()))
+            .map(|entry| download_asset(entry.name.clone(), client.clone()))
             .pipe(join_parallel)
             .await
             .pipe(log_errors);
