@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "arkdata"
 version = "2.0.0"
-description = "Arknights game data"
+description = "A program for fetching Arknights game data"
 license = "AGPL-3.0-or-later"
 authors = ["astral4 <88992929+astral4@users.noreply.github.com>"]
 readme = "README.md"
@@ -10,7 +10,11 @@ repository = "https://github.com/astral4/arkdata"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-kawapack = "^0.15.3"
+UnityPy = "^1.10.6"
+Pillow = "^10.1.0"
+pycryptodome = "^3.19.0"
+pymongo = "^4.5.0"
+fsb5 = "^1.0"
 
 [build-system]
 requires = ["poetry-core"]
