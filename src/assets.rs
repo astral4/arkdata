@@ -3,7 +3,10 @@ use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
 use once_cell::sync::Lazy;
-use pyo3::{types::PyBytes, Python};
+use pyo3::{
+    types::{PyBytes, PyModule},
+    Python,
+};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -134,14 +137,18 @@ async fn download_asset(name: Arc<str>, client: Client) -> Result<JoinHandle<()>
             file.read_to_end(&mut buffer).unwrap();
 
             Python::with_gil(|py| {
-                let extract = py.import("kawapack").unwrap().getattr("extract").unwrap();
+                const PY_FILE: &str = include_str!("./extract.py");
+
                 let data = PyBytes::new_with(py, buffer.len(), |bytes| {
                     bytes.copy_from_slice(&buffer);
                     Ok(())
                 })
                 .unwrap();
 
-                extract
+                PyModule::from_code(py, PY_FILE, "extract.py", "kawapack")
+                    .unwrap()
+                    .getattr("extract")
+                    .unwrap()
                     .call1((
                         data,
                         file.mangled_name().parent().unwrap().to_path_buf(),
