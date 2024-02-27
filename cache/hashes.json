@@ -1,16 +1,16 @@
 {
-  "spritepack/ui_item_icons_h1_0.ab": "88cb418ba221caf9488790126785a901",
-  "spritepack/ui_char_avatar_2.ab": "cd0a438322b4845f49db00d18b05495a",
-  "spritepack/ui_char_avatar_6.ab": "7f3f7a11463b720145921d37e2cb8ddb",
-  "spritepack/ui_char_avatar_9.ab": "b3b3703508c7c2176e11ecc50c707bdc",
-  "spritepack/ui_char_avatar_0.ab": "8c2a8badac5856e80cb687be429f243c",
-  "arts/building/buffs/buff_icon_hub.ab": "4134a6621adafc336bb76c1a91db90b1",
-  "spritepack/ui_char_avatar_4.ab": "944426a5a17395483389040fead0175b",
-  "spritepack/ui_char_avatar_5.ab": "a5772de9f4c40730b32fefbbff73e09e",
-  "spritepack/ui_char_avatar_3.ab": "548f69ea988dcc17c23adf4aa476c05d",
-  "spritepack/ui_char_avatar_8.ab": "0b371b541700612c34525843ab728a8c",
   "spritepack/building_ui_buff_skills_h1_0.ab": "0245287941dabff5966df7bef66042eb",
-  "spritepack/ui_char_avatar_10.ab": "2d7a1f3fb5e944c3bd7a70fdab5cc557",
+  "spritepack/ui_char_avatar_0.ab": "8c2a8badac5856e80cb687be429f243c",
+  "spritepack/ui_char_avatar_8.ab": "0b371b541700612c34525843ab728a8c",
+  "spritepack/ui_char_avatar_9.ab": "b3b3703508c7c2176e11ecc50c707bdc",
+  "spritepack/ui_item_icons_h1_0.ab": "88cb418ba221caf9488790126785a901",
   "spritepack/ui_char_avatar_1.ab": "0f86378ad0c9e6a6f61bd329826410d6",
-  "spritepack/ui_char_avatar_7.ab": "abde230dc397f9248bb5ebfbc74acb9c"
+  "arts/building/buffs/buff_icon_hub.ab": "4134a6621adafc336bb76c1a91db90b1",
+  "spritepack/ui_char_avatar_10.ab": "2d7a1f3fb5e944c3bd7a70fdab5cc557",
+  "spritepack/ui_char_avatar_5.ab": "a5772de9f4c40730b32fefbbff73e09e",
+  "spritepack/ui_char_avatar_6.ab": "7f3f7a11463b720145921d37e2cb8ddb",
+  "spritepack/ui_char_avatar_2.ab": "b973670a962050a198ad1989966c8c40",
+  "spritepack/ui_char_avatar_4.ab": "944426a5a17395483389040fead0175b",
+  "spritepack/ui_char_avatar_7.ab": "abde230dc397f9248bb5ebfbc74acb9c",
+  "spritepack/ui_char_avatar_3.ab": "548f69ea988dcc17c23adf4aa476c05d"
 }
