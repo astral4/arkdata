@@ -13,6 +13,7 @@ async fn main() {
     let version = Version::load(&CONFIG.versions_path);
     let mut name_to_hash_mapping = NameHashMapping::load(&CONFIG.hashes_path);
     let client = Client::builder()
+        .http2_prior_knowledge()
         .https_only(true)
         .use_rustls_tls()
         .build()
