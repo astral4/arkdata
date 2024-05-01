@@ -4,7 +4,7 @@ use ahash::HashMap;
 use anyhow::Result;
 use once_cell::sync::Lazy;
 use pyo3::{
-    types::{PyBytes, PyModule},
+    types::{PyAnyMethods, PyBytes, PyModule},
     Python,
 };
 use reqwest::Client;
@@ -139,13 +139,13 @@ async fn download_asset(name: Arc<str>, client: Client) -> Result<JoinHandle<()>
             Python::with_gil(|py| {
                 const PY_FILE: &str = include_str!("./extract.py");
 
-                let data = PyBytes::new_with(py, buffer.len(), |bytes| {
+                let data = PyBytes::new_bound_with(py, buffer.len(), |bytes| {
                     bytes.copy_from_slice(&buffer);
                     Ok(())
                 })
                 .unwrap();
 
-                PyModule::from_code(py, PY_FILE, "extract.py", "kawapack")
+                PyModule::from_code_bound(py, PY_FILE, "extract.py", "kawapack")
                     .unwrap()
                     .getattr("extract")
                     .unwrap()
