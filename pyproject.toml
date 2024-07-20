@@ -11,9 +11,9 @@ repository = "https://github.com/astral4/arkdata"
 [tool.poetry.dependencies]
 python = "^3.12"
 UnityPy = "^1.10.14"
-Pillow = "^10.3.0"
+Pillow = "^10.4.0"
 pycryptodome = "^3.20.0"
-pymongo = "^4.7.3"
+pymongo = "^4.8.0"
 fsb5 = "^1.0"
 
 [build-system]
