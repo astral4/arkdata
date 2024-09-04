@@ -1,9 +1,8 @@
 use crate::{settings::Server, Cache, CONFIG};
 use ahash::HashMap;
-use once_cell::sync::Lazy;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use std::{cmp::max, thread::sleep, time::Duration};
+use std::{cmp::max, sync::LazyLock, thread::sleep, time::Duration};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct VersionInner {
@@ -35,7 +34,7 @@ impl Version {
     }
 }
 
-pub static VERSION: Lazy<VersionInner> = Lazy::new(|| {
+pub static VERSION: LazyLock<VersionInner> = LazyLock::new(|| {
     let client = Client::builder()
         .https_only(true)
         .timeout(Duration::from_secs(10))

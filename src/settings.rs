@@ -1,6 +1,5 @@
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::{fs::read_to_string, path::PathBuf};
+use std::{fs::read_to_string, path::PathBuf, sync::LazyLock};
 
 #[derive(Deserialize, Serialize, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Server {
@@ -26,7 +25,7 @@ pub struct Settings {
     pub path_whitelist: Option<Vec<String>>,
 }
 
-pub static CONFIG: Lazy<Settings> = Lazy::new(|| {
+pub static CONFIG: LazyLock<Settings> = LazyLock::new(|| {
     let mut settings: Settings =
         toml::from_str(&read_to_string("config.toml").expect("Failed to read configuration file"))
             .expect("Failed to deserialize configuration file");

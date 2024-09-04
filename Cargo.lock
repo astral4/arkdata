@@ -92,7 +92,6 @@ dependencies = [
  "bytes",
  "glob",
  "image",
- "once_cell",
  "pyo3",
  "rayon",
  "reqwest",

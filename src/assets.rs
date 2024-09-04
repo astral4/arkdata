@@ -2,7 +2,6 @@ use crate::{Cache, CONFIG, VERSION};
 use again::RetryPolicy;
 use ahash::HashMap;
 use anyhow::Result;
-use once_cell::sync::Lazy;
 use pyo3::{
     types::{PyAnyMethods, PyBytes, PyModule},
     Python,
@@ -12,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     future::Future,
     io::{Cursor, Read},
-    sync::Arc,
+    sync::{Arc, LazyLock},
     time::Duration,
 };
 use tap::Pipe;
@@ -45,7 +44,7 @@ impl NameHashMapping {
     }
 }
 
-static RETRY_POLICY: Lazy<RetryPolicy> = Lazy::new(|| {
+static RETRY_POLICY: LazyLock<RetryPolicy> = LazyLock::new(|| {
     RetryPolicy::exponential(Duration::from_secs(3))
         .with_max_retries(5)
         .with_jitter(true)
