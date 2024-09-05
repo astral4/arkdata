@@ -25,7 +25,7 @@ fn is_in_whitelist(test: &str) -> bool {
         .map_or(true, |list| list.iter().any(|p| test.contains(p)))
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct NameHashMapping {
     #[serde(flatten)]
     inner: HashMap<Arc<str>, Arc<str>>,
@@ -51,7 +51,7 @@ static RETRY_POLICY: LazyLock<RetryPolicy> = LazyLock::new(|| {
         .with_max_delay(Duration::from_secs(20))
 });
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 struct AssetData {
     name: Arc<str>,
     md5: Arc<str>,
@@ -59,12 +59,12 @@ struct AssetData {
     pack_id: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 struct PackData {
     name: Arc<str>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateInfo {
     ab_infos: Vec<AssetData>,

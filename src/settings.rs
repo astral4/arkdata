@@ -1,19 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::{fs::read_to_string, path::PathBuf, sync::LazyLock};
 
-#[derive(Deserialize, Serialize, Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Server {
     US,
     CN,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ServerLink {
     pub version: String,
     pub base: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Settings {
     pub server: Server,
     #[serde(skip)]

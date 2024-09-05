@@ -1,43 +1,35 @@
 use crate::CONFIG;
 use glob::glob;
 use image::{imageops::FilterType, open, DynamicImage, GenericImageView};
-use imagepath::RgbaPath;
 use rayon::iter::{IntoParallelRefIterator, ParallelBridge, ParallelIterator};
 use serde::{de, Deserialize};
 use std::{
     fs::{remove_file, File},
     io::BufReader,
     iter::zip,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
-mod imagepath {
-    use std::path::{Path, PathBuf};
+const ALPHA_SUFFIXES: [&str; 3] = ["_alpha", "[alpha]", "a"];
 
-    const ALPHA_SUFFIXES: [&str; 3] = ["_alpha", "[alpha]", "a"];
+struct RgbaPath {
+    pub rgb: PathBuf,
+    pub alpha: PathBuf,
+}
 
-    pub struct RgbaPath {
-        pub rgb: PathBuf,
-        pub alpha: PathBuf,
-    }
-
-    impl RgbaPath {
-        fn get_rgb_path(path: &Path) -> Option<PathBuf> {
-            path.file_stem().and_then(|stem| {
-                let stem_str = stem.to_string_lossy();
-                ALPHA_SUFFIXES.iter().find_map(|suffix| {
-                    stem_str.ends_with(suffix).then(|| {
-                        path.with_file_name(format!(
-                            "{}.png",
-                            stem_str.rsplit_once(suffix).unwrap().0
-                        ))
-                    })
+impl RgbaPath {
+    fn get_rgb_path(path: &Path) -> Option<PathBuf> {
+        path.file_stem().and_then(|stem| {
+            let stem_str = stem.to_string_lossy();
+            ALPHA_SUFFIXES.iter().find_map(|suffix| {
+                stem_str.ends_with(suffix).then(|| {
+                    path.with_file_name(format!("{}.png", stem_str.rsplit_once(suffix).unwrap().0))
                 })
             })
-        }
-        pub fn from_alpha_path(alpha: PathBuf) -> Option<Self> {
-            Self::get_rgb_path(&alpha).map(|rgb| Self { rgb, alpha })
-        }
+        })
+    }
+    fn from_alpha_path(alpha: PathBuf) -> Option<Self> {
+        Self::get_rgb_path(&alpha).map(|rgb| Self { rgb, alpha })
     }
 }
 
@@ -108,7 +100,7 @@ fn deserialize_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
     D: de::Deserializer<'de>,
 {
-    let s: u8 = de::Deserialize::deserialize(deserializer)?;
+    let s: u8 = Deserialize::deserialize(deserializer)?;
 
     match s {
         0 => Ok(false),

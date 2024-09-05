@@ -4,7 +4,7 @@ use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use std::{cmp::max, sync::LazyLock, thread::sleep, time::Duration};
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct VersionInner {
     #[serde(alias = "resVersion")]
     pub resource: String,
@@ -12,7 +12,7 @@ pub struct VersionInner {
     client: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Version {
     #[serde(flatten)]
     version: HashMap<Server, VersionInner>,
@@ -62,18 +62,15 @@ pub static VERSION: LazyLock<VersionInner> = LazyLock::new(|| {
 #[allow(clippy::should_panic_without_expect)]
 mod tests {
     use super::*;
-    use crate::VERSION;
     use serde_json::json;
-    use std::{fs::File, panic::catch_unwind};
+    use std::{
+        fs::{remove_file, File},
+        panic::catch_unwind,
+    };
     use uuid::Uuid;
 
     fn generate_path() -> String {
         format!("{}{}", Uuid::new_v4(), ".json")
-    }
-
-    #[tokio::test]
-    async fn get_version() {
-        let _ = VERSION;
     }
 
     #[test]
@@ -95,7 +92,7 @@ mod tests {
                 }
             }
         });
-        std::fs::remove_file(path);
+        remove_file(path);
         res.unwrap();
     }
 }
