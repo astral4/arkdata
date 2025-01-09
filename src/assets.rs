@@ -18,6 +18,8 @@ use tap::Pipe;
 use tokio::task::{spawn_blocking, JoinHandle, JoinSet};
 use zip::ZipArchive;
 
+include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
+
 fn is_in_whitelist(test: &str) -> bool {
     CONFIG
         .path_whitelist
@@ -136,15 +138,14 @@ async fn download_asset(name: Arc<str>, client: Client) -> Result<JoinHandle<()>
             file.read_to_end(&mut buffer).unwrap();
 
             Python::with_gil(|py| {
-                const PY_FILE: &str = include_str!("./extract.py");
-
-                let data = PyBytes::new_bound_with(py, buffer.len(), |bytes| {
+                let data = PyBytes::new_with(py, buffer.len(), |bytes| {
                     bytes.copy_from_slice(&buffer);
                     Ok(())
                 })
                 .unwrap();
 
-                PyModule::from_code_bound(py, PY_FILE, "extract.py", "kawapack")
+                // PY_FILE is created by `build.rs`
+                PyModule::from_code(py, PY_FILE, c"extract.py", c"kawapack")
                     .unwrap()
                     .getattr("extract")
                     .unwrap()
