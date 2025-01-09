@@ -1,21 +1,16 @@
-[tool.poetry]
+[project]
 name = "arkdata"
-version = "2.0.0"
+version = "3.0.0"
 description = "A program for fetching Arknights game data"
-license = "AGPL-3.0-or-later"
-authors = ["astral4 <88992929+astral4@users.noreply.github.com>"]
+license = {file = "LICENSE"}
+authors = [{name = "Kyle Chen"}]
 readme = "README.md"
-homepage = "https://github.com/astral4/arkdata"
-repository = "https://github.com/astral4/arkdata"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-UnityPy = "^1.10.15"
-Pillow = "^10.4.0"
-pycryptodome = "^3.20.0"
-pymongo = "^4.8.0"
-fsb5 = "^1.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+urls = {Repository = "https://github.com/astral4/arkdata"}
+requires-python = ">=3.13"
+dependencies = [
+    "fsb5>=1.0",
+    "pillow>=11.1.0",
+    "pycryptodome>=3.21.0",
+    "pymongo>=4.10.1",
+    "unitypy>=1.20.16",
+]

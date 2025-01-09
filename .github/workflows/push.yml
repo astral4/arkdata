@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Convert Poetry lockfile
+      - name: Convert pyproject.toml to requirements.txt
         run: |
-          pipx install poetry
-          poetry export -f requirements.txt -o requirements.txt --without-hashes
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv pip compile pyproject.toml -o requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: "pip"
 
       - name: Install Python dependencies
