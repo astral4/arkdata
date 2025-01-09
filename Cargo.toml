@@ -55,8 +55,3 @@ unused_qualifications = "deny"
 [lints.clippy]
 module_name_repetitions = { level = "allow", priority = 1 }
 pedantic = "warn"
-
-[profile.release]
-strip = true
-lto = true
-codegen-units = 1
