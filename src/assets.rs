@@ -1,7 +1,7 @@
 use crate::{Cache, CONFIG, VERSION};
 use again::RetryPolicy;
-use ahash::HashMap;
 use anyhow::Result;
+use foldhash::HashMap;
 use pyo3::{
     types::{PyAnyMethods, PyBytes, PyModule},
     Python,
@@ -187,11 +187,7 @@ pub async fn fetch_all(hashes: &NameHashMapping, asset_info: &UpdateInfo, client
             .ab_infos
             .iter()
             .filter(|entry| {
-                is_in_whitelist(&entry.name)
-                    && hashes
-                        .inner
-                        .get(&entry.name)
-                        .map_or(true, |hash| hash != &entry.md5)
+                is_in_whitelist(&entry.name) && (hashes.inner.get(&entry.name) != Some(&entry.md5))
             })
             .map(|entry| download_asset(entry.name.clone(), client.clone()))
             .pipe(process_parallel)

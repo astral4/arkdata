@@ -1,5 +1,5 @@
 use crate::{settings::Server, Cache, CONFIG};
-use ahash::HashMap;
+use foldhash::HashMap;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use std::{cmp::max, sync::LazyLock, thread::sleep, time::Duration};
